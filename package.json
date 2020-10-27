@@ -1,0 +1,23 @@
+{
+  "name": "container-panel",
+  "version": "1.0.0",
+  "description": "Webapp letting you monitor and manage containers running on the same host.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com-Thomas-Pilz:Thomas-Pilz/Container-Panel"
+  },
+  "keywords": [
+    "node",
+    "express",
+    "bootstrap",
+    "dockerode",
+    "docker",
+    "webapp"
+  ],
+  "author": "Thomas Pilz",
+  "license": "ISC"
+}
