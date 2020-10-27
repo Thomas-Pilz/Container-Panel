@@ -2,9 +2,10 @@
   "name": "container-panel",
   "version": "1.0.0",
   "description": "Webapp letting you monitor and manage containers running on the same host.",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon server.js",
+    "run": "nodejs server.js"
   },
   "repository": {
     "type": "git",
@@ -25,6 +26,7 @@
     "bootstrap": "^4.5.3",
     "dockerode": "^3.2.1",
     "express": "^4.17.1",
+    "express-handlebars": "^5.2.0",
     "nodemon": "^2.0.6"
   }
 }
