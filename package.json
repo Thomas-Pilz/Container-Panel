@@ -19,5 +19,12 @@
     "webapp"
   ],
   "author": "Thomas Pilz",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@deepstream/client": "^5.1.10",
+    "bootstrap": "^4.5.3",
+    "dockerode": "^3.2.1",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.6"
+  }
 }
