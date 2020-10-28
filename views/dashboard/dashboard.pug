@@ -1,0 +1,14 @@
+extends ../layout
+block append styles
+block append scripts
+block content
+    div(class="border-bottom pt-3")
+        h1 Dashboard
+    div(class="card-deck pt-3 col-12")
+        include card_runningContainers
+        include card_cpuUtil
+        include card_ramUtil
+    div(class="card-deck pt-3 col-12")
+        include card_containerTable
+    div(class="card-deck pt-3 col-12")
+        include card_imageTable

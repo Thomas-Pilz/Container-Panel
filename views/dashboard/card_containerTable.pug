@@ -1,0 +1,32 @@
+extends card_layout
+block card-body
+    h4(class="class-title") Containers
+    table(class="table table-hover")
+        thead
+            tr
+                th STATE
+                th ID
+                th NAME
+                th IMAGE
+                th COMMAND
+        tbody
+            each container in containers
+                - 
+                    let colorClass;
+                    switch(container.State.toUpperCase()){
+                        case "EXITED":
+                            colorClass = "text-danger";
+                            break;
+                        case "RUNNING":
+                            colorClass = "text-success";
+                            break;
+                        default:
+                            colorClass = "text-body";
+                    }
+                tr
+                    td(class=colorClass)= container.State
+                    td= container.Id
+                    td= container.Names
+                    td= container.Image
+                    td= container.Command
+        

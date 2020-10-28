@@ -1,9 +1,8 @@
-
-var express = require('express');
-const DashboardController = require('../controller/DashboardController');
+const express = require('express');
+const { DashboardController } = require('../controller/DashboardController');
 
 // get router
-var router = express.Router();
+const router = express.Router();
 
 // define GET routes
 router

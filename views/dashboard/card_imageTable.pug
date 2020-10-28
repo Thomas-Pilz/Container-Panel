@@ -1,0 +1,17 @@
+extends card_layout
+block card-body
+    h4(class="class-title") Images
+    table(class="table table-hover")
+        thead
+            tr
+                th ID
+                th REPO TAGS
+                th CREATED
+                th SIZE
+        tbody
+            each image in images
+                tr
+                    td= image.Id
+                    td= image.RepoTags
+                    td= image.Created
+                    td= image.Size
