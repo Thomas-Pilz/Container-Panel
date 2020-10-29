@@ -28,7 +28,7 @@ class DashboardController {
 
             // render view
             res.render("dashboard/dashboard", {
-                layout: "base",
+                title: "Dashboard",
                 containers: containers,
                 numRunCon: containers.length,
                 images: images
