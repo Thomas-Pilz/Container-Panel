@@ -1,4 +1,13 @@
 const { model } = require("../models/ContainerModel");
+
+// Needed to manipulate nav-sidebar dynamically 
+const nav = [
+    { href: "/dashboard", text: "Dashboard", iconClass: "fas fa-th fa-lg pr-3 text-white"},
+    { href: "/containers", text: "Container", iconClass: "fab fa-docker fa-lg pr-3 text-white"},
+    { href: "/images", text: "Images", iconClass: "far fa-clone fa-lg pr-3 text-white"},
+    { href: "/ressources", text: "Ressources", iconClass: "fas fa-server fa-lg pr-3 text-white"},
+]
+
 /**
  * Creates a DashboardController object used to determine actions to be carried out.
  *
@@ -25,13 +34,20 @@ class DashboardController {
                 image.Size = conv2readableSizeFormat(image.Size);
             });
 
+            let runningContainers = [];
+            containers.filter((container) => {
+                 if (container.State === "Running"){
+                     runningContainers.push(container);
+                 }
+            })
 
             // render view
             res.render("dashboard/dashboard", {
                 title: "Dashboard",
                 containers: containers,
-                numRunCon: containers.length,
-                images: images
+                numRunCon: runningContainers.length,
+                images: images,
+                nav: nav
             });
         } catch (exception) {
             res.status(500).send(exception)

@@ -7,6 +7,9 @@ const router = express.Router();
 // define GET routes
 router
     .get("/", DashboardController.start);
+    // .get("/", ContainersController.start)
+    // .get("/", ImagesController.start)
+    // .get("/", RessourcesController.start)
 
 // define POST routes
 

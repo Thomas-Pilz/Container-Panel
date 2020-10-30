@@ -1,0 +1,12 @@
+.sb-nav-item{
+    
+}
+
+.sb-nav-item:hover{
+    border-top: white solid 1px;
+    border-bottom: white solid 1px;
+}
+
+.sb-nav-item-text{
+    text-decoration: none;
+}

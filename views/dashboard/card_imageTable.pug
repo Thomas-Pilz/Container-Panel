@@ -11,7 +11,7 @@ block card-body
         tbody
             each image in images
                 tr
-                    td(class="mw-25")= image.Id
-                    td(class="mw-25")= image.RepoTags
+                    td(style="width: 15%;")= image.Id
+                    td(style="width: 15%;")= image.RepoTags
                     td= image.Created
                     td= image.Size
