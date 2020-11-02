@@ -1,17 +1,18 @@
 extends card_layout
 block card-body
-    h4(class="class-title") Images
-    table(class="table table-hover")
+    icon(class="far fa-clone fa-2x pr-3")
+    span(class="class-title" style="font-size: 1.5rem;") Images
+    table(class="table table-hover mt-4" id="image-table")
         thead
             tr
                 th ID
-                th REPO TAGS
+                th REPO/ NAME:TAG
                 th CREATED
                 th SIZE
         tbody
             each image in images
-                tr
-                    td(style="width: 15%;")= image.Id
-                    td(style="width: 15%;")= image.RepoTags
-                    td= image.Created
-                    td= image.Size
+                tr(data-js-href="/images/" + image.Id) 
+                        td(style="width: 15%;")= image.Id
+                        td(style="width: 15%;")= image.RepoTags
+                        td= image.Created
+                        td= image.Size  

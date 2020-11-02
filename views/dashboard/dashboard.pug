@@ -1,11 +1,12 @@
 extends ../layout
 block append styles
 block append scripts
+    script(src="js/dashboard.js" type="text/javascript")
 block content
     div(class="border-bottom pt-3")
         h1 Dashboard
     div(class="col-12 card-deck p-0 pt-3")
-        include card_runningContainers
+        include card_containers
         include card_cpuUtil
         include card_ramUtil
     div(class="col-12 p-0 pt-3 pr-4")

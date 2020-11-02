@@ -1,7 +1,8 @@
 extends card_layout
 block card-body
-    h4(class="class-title") Containers
-    table(class="table table-hover")
+    icon(class="fab fa-docker fa-2x pr-3")
+    span(class="class-title" style="font-size: 1.5rem;") Containers
+    table(class="table table-hover mt-4" id="container-table")
         thead
             tr
                 th STATE
@@ -23,8 +24,8 @@ block card-body
                         default:
                             colorClass = "text-body";
                     }
-                tr
-                    td(class=colorClass)= container.State
+                tr(data-js-href="containers/" + container.Id)
+                    td(class=colorClass )= container.State
                     td(class="w-25")= container.Id
                     td= container.Names
                     td= container.Image

@@ -1,0 +1,4 @@
+/* Make cursor a pointer in case of an element with a object that will link to another page due to javascript */
+tr[data-js-href]{
+    cursor: pointer;
+}
