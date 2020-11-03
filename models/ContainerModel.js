@@ -1,4 +1,3 @@
-const Dockerode = require("dockerode");
 const Docker = require("dockerode");
 
 /**
@@ -29,13 +28,33 @@ class ContainerModel {
     }
 
     /**
-     * 
+     * Get all images stored on a host
      * @returns {Dockerode.ImageInfo[]}
      */
     async getImages(){
         return await this.docker.listImages();
     }
+
+    async getContainerDetails(id){
+        container = await this.docker.getContainer(id);
+        stats = await container.stats({stream: true});
+        console.log(stats);
+        //inspect = container.inspect()
+        //container
+    }
 }
 
+async function test(){
+    d = new Docker({ socketPath: "/var/run/docker.sock" });
+
+    container = await d.getContainer("ef9dc7acc4e0fbf538627de2d61d0783928765a3e041d94dc11a629c3309c5fd")
+    console.log(container);
+    // stats = await container.stats({stream: false})
+    inspect = await container.inspect();
+    console.log(inspect);
+    // console.log(stats);
+}
+
+test();
 // export a model instance
 module.exports.model = new ContainerModel();

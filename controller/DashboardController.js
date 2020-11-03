@@ -18,7 +18,7 @@ const nav = [
  */
 
 class DashboardController {
-    async start(req, res) {
+    async showDashboard(req, res) {
         try {
             // get containers
             const containers = await model.getContainers(true);
