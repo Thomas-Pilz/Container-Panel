@@ -27,7 +27,9 @@
     "chart.js": "^2.9.4",
     "dockerode": "^3.2.1",
     "express": "^4.17.1",
+    "express-ws": "^4.0.0",
     "nodemon": "^2.0.6",
-    "pug": "^3.0.0"
+    "pug": "^3.0.0",
+    "systeminformation": "^4.27.11"
   }
 }

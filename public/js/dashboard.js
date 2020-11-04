@@ -10,12 +10,15 @@ const colors = {
     bgLight: "#f8f9fa",
 }
 
+let cpuChart;
+let ramChart;
+let containerChart;
 
 // attach a delegated event handler to all table rows with an href data attribute to make rows clickable
 // even if they are added later on
 $(() => {
     // do not change to arrow function as this changes the "this" context
-    $(document.body).on("click", "tr[data-js-href]", function(){
+    $(document.body).on("click", "tr[data-js-href]", function () {
         console.log(this.dataset);
         window.location.href = this.dataset.jsHref;
     });
@@ -29,37 +32,39 @@ window.onload = (e) => {
 };
 
 function initCpuChart() {
-    var ctx = document.getElementById("cpuChart");
-    var myChart = new Chart(ctx, {
-        type: 'line',
+    const ctx = document.getElementById("cpuChart");
+    cpuChart = new Chart(ctx, {
+        type: 'doughnut',
         data: {
-            labels: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+            labels: ["Load in %", "Idle in %"],
             datasets: [{
-                data: [35.5, 38, 42, 40.9, 39.2, 37.9, 40.4],
-                backgroundColor: 'transparent',
-                borderColor: colors.bgPrimary,
-                borderWidth: 2,
-                pointBackgroundColor: '#FFF'
+                data: [0, 0],
+                backgroundColor: [colors.bgDanger, colors.bgSuccess],
             }]
         },
         options: {
             scales: {
                 yAxes: [{
                     ticks: {
-                        beginAtZero: true
+                        min: 0,
+                        max: 100,
+                        callback: (value, index, values) => {
+                            return value + "%";
+                        }
                     }
                 }]
             },
             legend: {
-                display: false,
-            }
+                display: true,
+                position: "bottom"
+            },
         }
     });
 }
 
 function initRamChart() {
-    var ctx = document.getElementById("ramChart");
-    var myChart = new Chart(ctx, {
+    const ctx = document.getElementById("ramChart");
+    ramChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: ["Used Memory", "Free Memory"],
@@ -90,8 +95,8 @@ function initRamChart() {
 }
 
 function initContainerChart() {
-    var ctx = document.getElementById("containerChart");
-    var myChart = new Chart(ctx, {
+    const ctx = document.getElementById("containerChart");
+    containerChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: ['Running', 'Exited', 'Created', 'Paused', 'Dead', 'Restarting'],
@@ -118,4 +123,54 @@ function initContainerChart() {
     });
 }
 
+const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
+const serverSocketUrl = socketProtocol + "//" + window.location.hostname + ":" + window.location.port + window.location.pathname
+console.log(serverSocketUrl)
+const socket = new WebSocket(serverSocketUrl);
 
+socket.onopen = e => {
+    console.log("Connection established.");
+    socket.send("Hello from client!");
+};
+
+socket.onclose = (code, reason) => {
+    console.log("connection closed!");
+};
+
+socket.onmessage = (e) => {
+    socket.send("");
+    stats = JSON.parse(e.data);
+
+    // update charts
+    updateRamChart(stats.hostStats.mem.used, stats.hostStats.mem.free);
+    updateCpuChart(stats.hostStats.currentLoad.currentload);
+    updateContainerChart(stats.stateCount);
+};
+
+function updateCpuChart(currentLoad){
+    cpuChart.data.datasets[0].data[0] = currentLoad;
+    cpuChart.data.datasets[0].data[1] = 100 - currentLoad;
+    cpuChart.update();
+};
+
+function updateRamChart(usedMem, freeMem){
+    ramChart.data.datasets[0].data[0] = usedMem;
+    ramChart.data.datasets[0].data[1] = freeMem;
+    ramChart.update();
+};
+
+function updateContainerChart(stateCount){
+    // shorten vars
+    labels = containerChart.data.labels;
+    data = containerChart.data.datasets[0].data;
+
+    for(i = 0; i < labels.length; i++){
+        if(stateCount[labels[i].toLowerCase()]){
+            data[i] = stateCount[labels[i].toLowerCase()];
+        }
+        else{
+            data[i] = 0;
+        }
+    }
+    containerChart.update();
+};

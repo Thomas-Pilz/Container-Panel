@@ -1,10 +1,12 @@
 const express = require("express");
+const expressWs = require('express-ws')
 const path = require("path");
 const pug = require("pug");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 
 // Initialize express app
 const app = express();
+expressWs(app)
 const port = process.env.port || 3000;
 
 // configure handlebars as the view engine of the app
@@ -24,5 +26,5 @@ app.get("/", (req, res) => {
 
 // start server
 app.listen(port, () => {
-    console.log(`Express app listening at http://localhost:${port}`);
+    console.log(`Express app listening at http://0.0.0.0:${port}`);
 });
