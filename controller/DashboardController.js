@@ -62,11 +62,16 @@ const dashboardController = {
             }
         });
 
-        return ws.send(JSON.stringify({
-            containers: containers,
-            stateCount: stateCount,
-            hostStats: await stats,
-        }));
+        try {
+            ws.send(JSON.stringify({
+                containers: containers,
+                stateCount: stateCount,
+                hostStats: await stats,
+            }));
+        } catch (error) {
+            // WebSocket could be closed while timeout (this method is called after a timeout) or processing of this method --> excpetion will occur
+        }
+
     },
 
     conv2readableSizeFormat: (size) => {
