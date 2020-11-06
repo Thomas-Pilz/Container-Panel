@@ -11,19 +11,33 @@ const nav = [
 const containerController = {
     showAllContainer: async (req, res) => {
         try {
-            // render view
             res.render("dashboard/allContainers", {
                 title: "All containers",
-                nav: nav
-            });
+                nav: nav,
+                }
+            );
         } catch (exception) {
             res.status(500).send(exception)
         }
     },
     showContainer: async (req, res) => {
-        // get container information
-        container = await model.getContainerDetails(Containersreq.params.id); 
+        try {
+            res.render("containerDetails/containerDetails", {
+                title: `Container Details - ${req.params.id}`,
+                containerId: req.params.id,
+                nav: nav,
+                }
+            );
+        } catch (exception) {
+            res.status(500).send(exception)
+        }
     },
+
+    subscribeRuntimeInfoFromContainer: async (ws, req) => {
+        model.subscribeRuntimeInfoFromContainer((runtimeInfo) => {
+            ws.send(JSON.stringify(runtimeInfo));
+        });
+    }
 }
 
 module.exports.containerController = containerController;

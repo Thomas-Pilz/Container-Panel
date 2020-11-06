@@ -1,9 +1,26 @@
 const Docker = require("dockerode");
 const si = require("systeminformation");
+const { DeepstreamClient } = require('@deepstream/client');
 
 
-docker = new Docker({ socketPath: "/var/run/docker.sock" });
+// Initialize global vars
+const client = new DeepstreamClient('localhost:6020');          // connect to Deepstream server
+docker = new Docker({ socketPath: "/var/run/docker.sock" });    // connect to Docker unix socket
+const containerList = "containerList";  // name of list containing registered container in Deepstream.io
+login2Deepstream();
+
 const model = {
+    /**
+     * Login into Deepstream.io server.
+     */
+    login2Deepstream: async () => {
+        login = await client.login();
+        if (!login.success) {
+            console.log("Deepstream: Login failed.");
+        }
+        console.log("Deepstream: Login successful.");
+    },
+
     /**
      * Get running containers on a host. If @param all is true, all containers will be returned.
      * @param {boolean} all
@@ -21,14 +38,6 @@ const model = {
         return await docker.listImages();
     },
 
-    getContainerDetails: async (id) => {
-        container = await docker.getContainer(id);
-        stats = await container.stats({ stream: false });
-        console.log(stats);
-        //inspect = container.inspect()
-        //container
-    },
-
     /**
      * Get current stats from host
      */
@@ -40,17 +49,23 @@ const model = {
 
         return await si.get(desiredStats);
     },
-}
 
-// async function test(){
-//     d = new Docker({ socketPath: "/var/run/docker.sock" });
-
-//     container = await d.getContainer("ef9dc7acc4e0fbf538627de2d61d0783928765a3e041d94dc11a629c3309c5fd")
-//     console.log(container);
-//     // stats = await container.stats({stream: false})
-//     inspect = await container.inspect();
-//     console.log(inspect);
-//     // console.log(stats);
-// }
+    /**
+     * Get live runtime information 
+     * @param {String} id Container-ID (SHA-256)
+     * @callback cb
+     * @param {any} data Runtime information of container
+     */
+    subscribeRuntimeInfoFromContainer: async (id, cb) => {
+        const containerList = await client.record.getList(containerList).getEntries();
+        if(!containerList.find(id)){
+            console.log(`No runtime information available for container ${id}`);
+            return {
+                err: `No runtime information available for container ${id}`
+            };
+        }
+        curContainer = await client.record.getRecord(`${containerList}/${id}`).subscribe(cb);
+    },
+};
 
 module.exports.model = model;

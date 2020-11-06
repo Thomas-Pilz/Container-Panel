@@ -188,17 +188,7 @@ function initContainerChart() {
 
 const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
 const serverSocketUrl = socketProtocol + "//" + window.location.hostname + ":" + window.location.port + window.location.pathname
-console.log(serverSocketUrl)
 const socket = new WebSocket(serverSocketUrl);
-
-socket.onopen = e => {
-    console.log("Connection established.");
-    socket.send("Hello from client!");
-};
-
-socket.onclose = (code, reason) => {
-    console.log("connection closed!");
-};
 
 socket.onmessage = (e) => {
     socket.send("");

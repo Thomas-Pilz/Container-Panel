@@ -27,8 +27,18 @@ router.ws('/', (ws, req) => {
     });
 
     ws.on("close",(code, reason) => { 
-        console.log("connection closed.") 
+        console.log(`Dashboard: WebSocket connection closed. \nCode: ${code}\tReason: ${reason}`)
     });
+});
+
+router.ws("/containers/:id", (ws, req) => {
+    ws.on("message", msg => {
+        containerController.subscribeRuntimeInfoFromContainer(ws, req);
+    });
+
+    ws.on("close", (code, reason) => {
+        console.log(`Container-Detail: WebSocket connection closed. \nCode: ${code}\tReason: ${reason}`)
+    })
 });
 
 module.exports = router;  
