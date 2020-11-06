@@ -1,7 +1,7 @@
 const express = require('express');
 const expressWs = require('express-ws')
-const dashboardController = require('../controller/DashboardController');
-const { ContainerController } = require('../controller/ContainerController');
+const { dashboardController } = require('../controller/dashboardController');
+const { containerController } = require('../controller/containerController');
 
 // get router
 const router = express.Router();
@@ -10,8 +10,8 @@ expressWs(router);
 // Routes for HTTP requests
 router
     .get("/", dashboardController.showDashboard)
-    .get("/containers", ContainerController.showAllContainer)
-    .get("/containers/:id", ContainerController.showContainer);
+    .get("/containers", containerController.showAllContainer)
+    .get("/containers/:id", containerController.showContainer);
 // .get("/", ImagesController.start)
 // .get("/", RessourcesController.start)
 

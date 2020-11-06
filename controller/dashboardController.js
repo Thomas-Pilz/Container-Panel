@@ -1,5 +1,4 @@
-const { json } = require("express");
-const { model } = require("../models/ContainerModel");
+const { model } = require("../models/model");
 
 // Needed to manipulate nav-sidebar dynamically 
 const nav = [
@@ -93,4 +92,4 @@ const dashboardController = {
         return convSize.toFixed(2) + " " + sizes[count];
     },
 }
-module.exports = dashboardController;
+module.exports.dashboardController = dashboardController;

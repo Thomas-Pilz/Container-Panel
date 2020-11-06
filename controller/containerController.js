@@ -1,4 +1,4 @@
-const { model } = require("../models/ContainerModel");
+const { model } = require("../models/model");
 
 // Needed to manipulate nav-sidebar dynamically 
 const nav = [
@@ -8,16 +8,8 @@ const nav = [
     { href: "/ressources", text: "Ressources", iconClass: "fas fa-server fa-lg pr-3 text-white" },
 ]
 
-/**
- * Creates a ContainerController object used to determine actions to be carried out.
- *
- * @class ContainerController
- * @classdesc Controller for the container. 
- * @author Thomas Pilz
- */
-
-class ContainerController {
-    async showAllContainer(req, res) {
+const containerController = {
+    showAllContainer: async (req, res) => {
         try {
             // render view
             res.render("dashboard/allContainers", {
@@ -27,12 +19,11 @@ class ContainerController {
         } catch (exception) {
             res.status(500).send(exception)
         }
-    };
-
-    async showContainer(req, res){
+    },
+    showContainer: async (req, res) => {
         // get container information
         container = await model.getContainerDetails(Containersreq.params.id); 
-    };
+    },
 }
 
-module.exports.ContainerController = new ContainerController();
+module.exports.containerController = containerController;

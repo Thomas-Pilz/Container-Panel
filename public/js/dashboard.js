@@ -8,7 +8,7 @@ const colors = {
     secondary: "#868e96",
     dark: "#343a40",
     light: "#f8f9fa",
-}
+};
 
 const color4state = {
     exited: "text-danger",
@@ -17,7 +17,7 @@ const color4state = {
     paused: "text-secondary",
     dead: "text-warning",
     restarting: "text-dark"
-}
+};
 
 let cpuChart;
 let ramChart;
