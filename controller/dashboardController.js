@@ -1,13 +1,13 @@
 const { model } = require("../models/model");
+const pug = require("pug");
+const path = require('path');
+const isEmpty = require("lodash.isempty");
 
-// Needed to manipulate nav-sidebar dynamically 
-const nav = [
-    { href: "/dashboard", text: "Dashboard", iconClass: "fas fa-th fa-lg pr-3 text-white" },
-    { href: "/containers", text: "Container", iconClass: "fab fa-docker fa-lg pr-3 text-white" },
-    { href: "/images", text: "Images", iconClass: "far fa-clone fa-lg pr-3 text-white" },
-    { href: "/ressources", text: "Ressources", iconClass: "fas fa-server fa-lg pr-3 text-white" },
-]
 
+// compile templates once and so the only need to be rendered for each data update
+const containerTableTempl = pug.compileFile(path.join(__dirname, "../views/dashboard/containerTable.pug"));
+const imageTableTempl = pug.compileFile(path.join(__dirname, "../views/dashboard/imageTable.pug"));
+let stateCount;
 /**
  * Creates a DashboardController object used to determine actions to be carried out.
  *
@@ -16,31 +16,21 @@ const nav = [
  * This class implements the Singleton pattern, so an instance is obtained calling getInstance().
  * @author Thomas Pilz
  */
-
 const dashboardController = {
     showDashboard: async (req, res) => {
         try {
             // get containers
-            const containers = await model.getContainers(true);
-            const images = await model.getImages();
-
-            // format output
-            images.forEach((image) => {
-                // get rid of "SHA256:" prefix
-                image.Id = image.Id.substring(7);
-                // format milliseconds to be an actual date
-                image.Created = new Date(1600843079000).toLocaleString('de-DE');//                                     1584120305684);
-                // convert to MB with 2 decimal places
-                image.Size = dashboardController.conv2readableSizeFormat(image.Size);
-            });
+            const containers = await model.getContainers(true, returnVal = true);
+            const images = await model.getImages(returnVal = true);
+            stateCount = model.getStateCount(containers);
+            console.log(stateCount);
 
             // render view
             res.render("dashboard/dashboard", {
                 title: "Dashboard",
                 containers: containers,
-                numRunContainers: 2,
                 images: images,
-                nav: nav
+                nav: model.getNav(),
             });
         } catch (exception) {
             res.status(500).send(exception)
@@ -48,48 +38,64 @@ const dashboardController = {
     },
 
     sendUpdate: async (ws, req) => {
-        stats = model.getHostCurrentStats();
-        containers = await model.getContainers(true);
+        events = [];
 
-        let stateCount = {};
-        containers.forEach(container => {
-            if (stateCount[container.State]) {
-                stateCount[container.State] += 1;
-            }
-            else {
-                stateCount[container.State] = 1;
-            }
-        });
+        /**
+         * Create a new event and push it on the event queue to be sent to the client
+         * @param {string} eventName unique event name
+         * @param {Object} eventData data to be assigned to event
+         */
+        function pushEventQueue(eventName, eventData) {
+            events.push(
+                {
+                    eventName: eventName,
+                    eventData: eventData,
+                });
+        }
 
-        try {
-            ws.send(JSON.stringify({
-                containers: containers,
+        /**
+         * Send a queue of events to client
+         * @param {[Event]} events
+         * @todo implement propper error handling
+         */
+        function sendUpdateEvents(events) {
+            try {
+                ws.send(JSON.stringify(events));
+            } catch (error) {
+                // TODO: implement propper error handling
+            }
+        }
+
+        const stats = model.getHostCurrentStats();
+        const images = model.getImages();
+        const containers = await model.getContainers(true);
+
+        if (containers) {
+            const stateCount = model.getStateCount(containers);
+            pushEventQueue("updateContainer", {
+                containerTableHtml: containerTableTempl({ containers: containers }),
                 stateCount: stateCount,
+            });
+        }
+        if (await images) {
+            pushEventQueue("updateImages", {
+                imageTableHtml: imageTableTempl({ images: images })
+            });
+        }
+        if (!isEmpty(stateCount)) {
+            pushEventQueue("regularUpdate", {
                 hostStats: await stats,
-            }));
-        } catch (error) {
-            // WebSocket could be closed while timeout (this method is called after a timeout) or processing of this method --> excpetion will occur
+                stateCount: stateCount,
+            });
+            stateCount = {};
         }
-
-    },
-
-    conv2readableSizeFormat: (size) => {
-        const factor = 1000;  // use 1000 instead of 1024 because the docker CLI works the same way! and in facht GB => 1000 GiBi => 1024
-        const sizes = {
-            0: "K",
-            1: "KB",
-            2: "MB",
-            3: "GB",
-            4: "TB"
+        else {
+            pushEventQueue("regularUpdate", {
+                hostStats: await stats,
+            });
         }
-        let count = 0;
-        let convSize = size;
-
-        while (convSize >= 1024 || count === 4) {
-            count++;
-            convSize = convSize / factor;
-        }
-        return convSize.toFixed(2) + " " + sizes[count];
+        console.log(events[0]);
+        sendUpdateEvents(events);
     },
 }
 module.exports.dashboardController = dashboardController;

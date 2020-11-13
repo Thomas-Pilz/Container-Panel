@@ -1,0 +1,50 @@
+- 
+    //- Button has to be of "opposite type" --> container is running --> stop button required and the other way round
+    const stateConfig = {
+        exited: {
+            color: "text-danger",
+            buttonType: "btn-success",
+            buttonText: "Restart",
+            action: "restart",
+        },
+        running: {
+            color: "text-success",
+            buttonType: "btn-danger",   
+            buttonText: "Stop",
+            action: "stop",
+        },
+        created: {
+            color: "text-info",
+        },
+        paused: {
+            color: "text-secondary",
+        },
+        dead: {
+            color: "text-warning",
+        },
+        restarting: {
+            color: "text-dark",
+        },
+    };
+table(class="table table-hover mt-4" id="container-table")
+    thead
+        tr
+            th STATE
+            th ID
+            th NAME
+            th IMAGE
+            th COMMAND
+            th ACTION
+    tbody
+        each container in containers
+            - let config = stateConfig[container.State.toLowerCase()];
+            tr(data-js-href="containers/" + container.Id)
+                td(class=config.color )= container.State
+                td(class="w-25")= container.Id
+                td= container.Names
+                td= container.Image
+                td= container.Command
+                if !config.buttonType === "undefined"
+                td(style="width: 180px;")
+                    button(class="action-btn btn btn-primary" onclick=`window.location.href='/containers/${container.Id}'`) Details
+                    button(class="action-btn start-stop-btn btn " + config.buttonType type="button" style="width: 80px;" onclick=`containerAction('${container.Id}', '${config.action}')`)= config.buttonText

@@ -1,0 +1,49 @@
+-
+    function formatSize(size){
+        const factor = 1000;  // use 1000 instead of 1024 because the docker CLI works the same way!
+        const sizes = {
+            0: "K",
+            1: "KB",
+            2: "MB",
+            3: "GB",
+            4: "TB"
+        }
+        let count = 0;
+        let convSize = size;
+        while (convSize >= 1024 || count === 4) {
+            count++;
+            convSize = convSize / factor;
+        }
+        return convSize.toFixed(2) + " " + sizes[count]
+    }
+
+    function formatImageId(imgId){
+        return imgId.substring(7);
+    }
+
+    function formatDate(timeInSeconds){
+        const date = new Date(timeInSeconds * 1000);
+        return date.toLocaleString('de-DE');
+    }
+
+table(class="table table-hover mt-4" id="image-table")
+    thead
+        tr
+            th ID
+            th REPO/ NAME:TAG
+            th CREATED
+            th SIZE
+            th ACTION
+    tbody
+        each image in images
+            - const imgId = formatImageId(image.Id)
+            tr(data-js-href="/images/" + imgId) 
+                    td(style="width: 15%;")= imgId
+                    td(style="width: wrap-content;")
+                        each tag in image.RepoTags
+                            span= tag
+                            br
+                    td.text-right(style="width: wrap-content;")= formatDate(image.Created)
+                    td.text-right(style="width: wrap-content;")= formatSize(image.Size)
+                    td
+                        button(class="action-btn btn btn-primary" onclick=`window.location.href='/images/${imgId}'`) Details

@@ -1,19 +1,12 @@
+const si = require("systeminformation");
 const { model } = require("../models/model");
-
-// Needed to manipulate nav-sidebar dynamically 
-const nav = [
-    { href: "/dashboard", text: "Dashboard", iconClass: "fas fa-th fa-lg pr-3 text-white" },
-    { href: "/containers", text: "Container", iconClass: "fab fa-docker fa-lg pr-3 text-white" },
-    { href: "/images", text: "Images", iconClass: "far fa-clone fa-lg pr-3 text-white" },
-    { href: "/ressources", text: "Ressources", iconClass: "fas fa-server fa-lg pr-3 text-white" },
-]
 
 const containerController = {
     showAllContainer: async (req, res) => {
         try {
-            res.render("dashboard/allContainers", {
+            res.render("containers/allContainers", {
                 title: "All containers",
-                nav: nav,
+                nav: model.getNav(),
                 }
             );
         } catch (exception) {
@@ -21,11 +14,12 @@ const containerController = {
         }
     },
     showContainer: async (req, res) => {
+        console.log("called");
         try {
+            console.log("rendering...")
             res.render("containerDetails/containerDetails", {
                 title: `Container Details - ${req.params.id}`,
-                containerId: req.params.id,
-                nav: nav,
+                nav: model.getNav(),
                 }
             );
         } catch (exception) {
@@ -34,10 +28,15 @@ const containerController = {
     },
 
     subscribeRuntimeInfoFromContainer: async (ws, req) => {
-        model.subscribeRuntimeInfoFromContainer((runtimeInfo) => {
+        model.subscribeRuntimeInfoFromContainer(req.params.id, (runtimeInfo) => {
             ws.send(JSON.stringify(runtimeInfo));
         });
-    }
+    },
+
+    containerAction: async (req, res) => {
+        await model.containerAction(req.body.id, req.body.action);
+        res.end();
+    },
 }
 
 module.exports.containerController = containerController;

@@ -23,15 +23,15 @@ let cpuChart;
 let ramChart;
 let containerChart;
 
-// attach a delegated event handler to all table rows with an href data attribute to make rows clickable
-// even if they are added later on
-$(() => {
-    // do not change to arrow function as this changes the "this" context
-    $(document.body).on("click", "tr[data-js-href]", function () {
-        console.log(this.dataset);
-        window.location.href = this.dataset.jsHref;
-    });
-})
+// // attach a delegated event handler to all table rows with an href data attribute to make rows clickable
+// // even if they are added later on
+// $(() => {
+//     // do not change to arrow function as this changes the "this" context
+//     $(document.body).on("click", "tr[data-js-href]", function () {
+//         console.log(this.dataset);
+//         window.location.href = this.dataset.jsHref;
+//     });
+// })
 
 // load all charts
 window.onload = (e) => {
@@ -41,7 +41,7 @@ window.onload = (e) => {
     initContainerChart();
 };
 
-function configCharts(){
+function configCharts() {
     Chart.defaults.global.tooltips.titleFontSize = 16;
     Chart.defaults.global.tooltips.bodyFontSize = 14;
     Chart.defaults.global.showLines = false;
@@ -172,7 +172,7 @@ function initContainerChart() {
                     gridLines: false,
                 }],
                 yAxes: [{
-                    display: false,
+                    display: true,
                     ticks: {
                         beginAtZero: true,
                         stepSize: 1,
@@ -190,17 +190,38 @@ const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
 const serverSocketUrl = socketProtocol + "//" + window.location.hostname + ":" + window.location.port + window.location.pathname
 const socket = new WebSocket(serverSocketUrl);
 
+
 socket.onmessage = (e) => {
     socket.send("");
-    stats = JSON.parse(e.data);
-
-    // update charts
-    updateRamChart(stats.hostStats.mem.used, stats.hostStats.mem.free);
-    updateCpuChart(stats.hostStats.currentLoad.currentload);
-    updateContainerChart(stats.stateCount);
-    // update tables
-    updateContainerTable(stats.containers);
+    const data = JSON.parse(e.data);
+    data.forEach(updateEvent => {
+        eventData = updateEvent.eventData;
+        switch (updateEvent.eventName) {
+            case "regularUpdate":
+                // update charts
+                updateRamChart(eventData.hostStats.mem.used, eventData.hostStats.mem.free);
+                updateCpuChart(eventData.hostStats.currentLoad.currentload);
+                console.log(eventData.hasOwnProperty("stateCount"));
+                if (eventData.hasOwnProperty("stateCount")){
+                    console.log(eventData.stateCount);
+                    updateContainerChart(eventData.stateCount);
+                }
+                break;
+            case "updateContainer":
+                // update container data
+                updateHtmlTable("containerTable-parent", eventData.containerTableHtml);
+                updateContainerChart(eventData.stateCount);
+                break;
+            case "updateImages":
+                // update image data
+                updateHtmlTable("imageTable-parent", eventData.imageTableHtml);
+                break;
+            default:
+                console.error(`Event ${updateEvent.eventName} is unknown.`);
+        }; 
+    });
 };
+
 
 function updateCpuChart(currentLoad) {
     cpuChart.data.datasets[0].data[0] = currentLoad.toFixed(2);
@@ -218,7 +239,7 @@ function updateRamChart(usedMem, freeMem) {
     ramChart.update();
 };
 
- function conv2readableSizeFormat (size){
+function conv2readableSizeFormat(size) {
     const factor = 1000;  // use 1000 instead of 1024 because the docker CLI works the same way!
     const sizes = {
         0: "K",
@@ -256,24 +277,50 @@ function updateContainerChart(stateCount) {
     containerChart.update();
 };
 
-function updateContainerTable(containers) {
-    let tbody = document.querySelector("#container-table tbody");
-    tbody.innerHTML = " ";
+// function updateContainerTable(containers) {
+//     let tbody = document.querySelector("#container-table tbody");
+//     tbody.innerHTML = " ";
 
-    for (i = 0; i < containers.length; i++) {
-        let colClass = color4state[containers[i].State]
+//     for (i = 0; i < containers.length; i++) {
+//         let colClass = color4state[containers[i].State]
 
-        tbody.insertAdjacentHTML("beforeend",
-            `
-            <tr data-js-href="containers/${containers[i].Id}">
-                <td class="${colClass}">${containers[i].State}</td>
-                <td class="w-25">${containers[i].Id}</td>
-                <td>${containers[i].Names}</td>
-                <td>${containers[i].Image}</td>
-                <td>$${containers[i].Command}</td>
-            </tr>
-            `
-        );
-    }
+//         tbody.insertAdjacentHTML("beforeend",
+//             `
+//             <tr data-js-href="containers/${containers[i].Id}">
+//                 <td class="${colClass}">${containers[i].State}</td>
+//                 <td class="w-25">${containers[i].Id}</td>
+//                 <td>${containers[i].Names}</td>
+//                 <td>${containers[i].Image}</td>
+//                 <td>$${containers[i].Command}</td>
+//             </tr>
+//             `
+//         );
+//     }
+// };
 
+function updateHtmlTable(parentId, tableHtml) {
+    const parent = document.getElementById(parentId);
+    parent.removeChild(parent.firstChild);
+    parent.innerHTML = tableHtml;
 };
+
+function containerAction(containerId, action) {
+    url = "/containers/action";
+    const stateTriggerButton = document.querySelector(`tr[data-js-href='containers/${containerId}'] td button.start-stop-btn`);
+    stateTriggerButton.innerHTML =
+        `
+    <div class="spinner-border spinner-border-sm text-white" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+    `
+    // console.log("Request to " + url + " with params " + "\n" + containerId + "\n" + action);
+    $.ajax({
+        url: url,
+        method: "POST",
+        data: JSON.stringify({
+            id: containerId,
+            action: action,
+        }),
+        contentType: 'application/json',
+    });
+}

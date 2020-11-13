@@ -1,0 +1,10 @@
+.action-btn{
+    width: 80px;
+    height: 38px;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.start-stop-btn{
+    visibility: visible;
+}
