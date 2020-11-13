@@ -14,9 +14,7 @@ const containerController = {
         }
     },
     showContainer: async (req, res) => {
-        console.log("called");
         try {
-            console.log("rendering...")
             res.render("containerDetails/containerDetails", {
                 title: `Container Details - ${req.params.id}`,
                 nav: model.getNav(),

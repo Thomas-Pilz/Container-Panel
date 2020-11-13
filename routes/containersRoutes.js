@@ -17,13 +17,12 @@ router
 
 // Routes for WebSocket
 router.ws("/:id", (ws, req) => {
-    ws.send("Connection established.");
     ws.on("message", msg => {
-        console.log("message received. Subscribing to event");
         containerController.subscribeRuntimeInfoFromContainer(ws, req);
     });
 
     ws.on("close", (code, reason) => {
+        // containerController.unsubscribeRuntimeInfoFromContainer(ws, req);
         console.log(`Container-Detail: WebSocket connection closed. \nCode: ${code}\tReason: ${reason}`)
     });
 });
