@@ -23,7 +23,6 @@ const dashboardController = {
             const containers = await model.getContainers(true, returnVal = true);
             const images = await model.getImages(returnVal = true);
             stateCount = model.getStateCount(containers);
-            console.log(stateCount);
 
             // render view
             res.render("dashboard/dashboard", {
@@ -94,7 +93,6 @@ const dashboardController = {
                 hostStats: await stats,
             });
         }
-        console.log(events[0]);
         sendUpdateEvents(events);
     },
 }

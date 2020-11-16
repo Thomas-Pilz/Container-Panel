@@ -46,7 +46,7 @@ const model = {
      * @returns {Dockerode.ContainerInfo[]} list of (running) containers or false if data has not changed
      */
     getContainers: async (allStates, returnVal = false, fields = ["State", "Id", "Names", "Image", "Command"]) => {
-        if(returnVal && !isEmpty(containerData)){
+        if (returnVal && !isEmpty(containerData)) {
             return containerData;
         }
         const newContainerData = await docker.listContainers({ all: allStates });
@@ -75,7 +75,7 @@ const model = {
      * @returns {Dockerode.ImageInfo[]}
      */
     getImages: async (returnVal = false) => {
-        if(returnVal && !isEmpty(imageData)){
+        if (returnVal && !isEmpty(imageData)) {
             return imageData;
         }
         const newImageData = await docker.listImages();
@@ -114,7 +114,18 @@ const model = {
         }
         curContainer = await client.record.getRecord(`${containerListName}/${id}`).subscribe(cb);
     },
-    
+
+    /**
+     * Unsubscribe from updates from a container
+     * @param {String} id Container-ID (SHA-256)
+     */
+    unsubscribeRuntimeInfoFromContainer: async (id, cb) => {
+        const containerList = await client.record.getList(containerListName).whenReady();
+        if (containerList.getEntries().find(recordName => recordName === `${containerListName}/${id}`)) {
+            curContainer = await client.record.getRecord(`${containerListName}/${id}`).unsubscribe();
+        }
+    },
+
     /**
      * Get amount of containers in the various states
      * @param {Container[]} containers list of containers with State attribute

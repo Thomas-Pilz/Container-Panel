@@ -25,10 +25,25 @@ const containerController = {
         }
     },
 
+    /**
+     * @todo Implement suitable error handling
+     */
     subscribeRuntimeInfoFromContainer: async (ws, req) => {
         model.subscribeRuntimeInfoFromContainer(req.params.id, (runtimeInfo) => {
-            ws.send(JSON.stringify(runtimeInfo));
+            try {
+                ws.send(JSON.stringify(runtimeInfo));
+            } catch (error) {
+                // Websocket might be closed before callback --> sending over terminated connection --> error
+                // TODO implement suitable error handling
+            }
         });
+    },
+
+    /**
+     * Uns
+     */
+    unsubscribeRuntimeInfoFromContainer: async (ws, req) => {
+        model.unsubscribeRuntimeInfoFromContainer(req.params.id);
     },
 
     containerAction: async (req, res) => {

@@ -17,12 +17,14 @@ router
 
 // Routes for WebSocket
 router.ws("/:id", (ws, req) => {
+    console.log(`/containers: Client connected.`)
+
     ws.on("message", msg => {
         containerController.subscribeRuntimeInfoFromContainer(ws, req);
     });
 
     ws.on("close", (code, reason) => {
-        // containerController.unsubscribeRuntimeInfoFromContainer(ws, req);
+        containerController.unsubscribeRuntimeInfoFromContainer(ws, req);
         console.log(`Container-Detail: WebSocket connection closed. \nCode: ${code}\tReason: ${reason}`)
     });
 });

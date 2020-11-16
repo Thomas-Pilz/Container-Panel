@@ -13,6 +13,7 @@ router
 
 // routes for websockets
 router.ws('/', (ws, req) => {
+    console.log(`/dashboard: Client connected.`);
     const intervalTime = 1000;
     dashboardController.sendUpdate(ws, req)
     ws.on('message', msg => {

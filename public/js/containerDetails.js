@@ -8,7 +8,6 @@ socket.onopen = e => {
 }
 
 socket.onmessage = e => {
-    console.log("message received.")
     runtimeInfo = JSON.parse(e.data);
     console.log(runtimeInfo);
 };
