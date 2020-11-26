@@ -39,6 +39,7 @@ window.onload = (e) => {
     initCpuChart();
     initRamChart();
     initContainerChart();
+    startWebsocketClient();
 };
 
 function configCharts() {
@@ -186,28 +187,21 @@ function initContainerChart() {
     });
 }
 
-const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-const serverSocketUrl = socketProtocol + "//" + window.location.hostname + ":" + window.location.port + window.location.pathname
-const socket = new WebSocket(serverSocketUrl);
+function startWebsocketClient(){
+    const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
+    const serverSocketUrl = socketProtocol + "//" + window.location.hostname + ":" + window.location.port + window.location.pathname
+    const socket = new WebSocket(serverSocketUrl);
 
-
-socket.onmessage = (e) => {
-    socket.send("");
-    const data = JSON.parse(e.data);
-    data.forEach(updateEvent => {
+    socket.onmessage = (e) => {
+        const updateEvent = JSON.parse(e.data);
         eventData = updateEvent.eventData;
         switch (updateEvent.eventName) {
-            case "regularUpdate":
+            case "updateHostStats":
                 // update charts
-                updateRamChart(eventData.hostStats.mem.used, eventData.hostStats.mem.free);
-                updateCpuChart(eventData.hostStats.currentLoad.currentload);
-                console.log(eventData.hasOwnProperty("stateCount"));
-                if (eventData.hasOwnProperty("stateCount")){
-                    console.log(eventData.stateCount);
-                    updateContainerChart(eventData.stateCount);
-                }
+                updateRamChart(eventData.mem.used, eventData.mem.free);
+                updateCpuChart(eventData.currentLoad.currentload);
                 break;
-            case "updateContainer":
+            case "updateContainers":
                 // update container data
                 updateHtmlTable("containerTable-parent", eventData.containerTableHtml);
                 updateContainerChart(eventData.stateCount);
@@ -219,8 +213,8 @@ socket.onmessage = (e) => {
             default:
                 console.error(`Event ${updateEvent.eventName} is unknown.`);
         }; 
-    });
-};
+    };    
+}
 
 
 function updateCpuChart(currentLoad) {
@@ -276,27 +270,6 @@ function updateContainerChart(stateCount) {
     }
     containerChart.update();
 };
-
-// function updateContainerTable(containers) {
-//     let tbody = document.querySelector("#container-table tbody");
-//     tbody.innerHTML = " ";
-
-//     for (i = 0; i < containers.length; i++) {
-//         let colClass = color4state[containers[i].State]
-
-//         tbody.insertAdjacentHTML("beforeend",
-//             `
-//             <tr data-js-href="containers/${containers[i].Id}">
-//                 <td class="${colClass}">${containers[i].State}</td>
-//                 <td class="w-25">${containers[i].Id}</td>
-//                 <td>${containers[i].Names}</td>
-//                 <td>${containers[i].Image}</td>
-//                 <td>$${containers[i].Command}</td>
-//             </tr>
-//             `
-//         );
-//     }
-// };
 
 function updateHtmlTable(parentId, tableHtml) {
     const parent = document.getElementById(parentId);

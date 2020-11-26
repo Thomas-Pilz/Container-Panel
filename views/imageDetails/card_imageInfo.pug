@@ -1,0 +1,36 @@
+extends ../templates/card_footerless_templ
+block card-body
+    - 
+        function formatSize(size){
+            const factor = 1000;  // use 1000 instead of 1024 because the docker CLI works the same way!
+            const sizes = {
+                0: "K",
+                1: "KB",
+                2: "MB",
+                3: "GB",
+                4: "TB"
+            }
+            let count = 0;
+            let convSize = size;
+            while (convSize >= 1024 || count === 4) {
+                count++;
+                convSize = convSize / factor;
+            }
+            return convSize.toFixed(2) + " " + sizes[count]
+        }
+
+        function formatImageId(imgId){
+            return imgId.substring(7);
+        }
+    
+        function formatDate(timeInSeconds){
+            const date = new Date(timeInSeconds * 1000);
+            return date.toLocaleString('de-DE');
+        }
+    h4(class="class-title") Information
+    table(class="table table-borderless mt-4" id="image-info")
+        tbody
+            each info in infos
+                tr
+                    td(class="label")= info[0].toUpperCase()+":"
+                    td= info[1]

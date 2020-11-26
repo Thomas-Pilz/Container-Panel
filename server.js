@@ -4,6 +4,8 @@ const path = require("path");
 const bodyParser = require("body-parser");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const containersRoutes = require("./routes/containersRoutes");
+const imagesRoutes = require("./routes/imagesRoutes");
+const { model } = require("./models/model");
 
 // Initialize express app
 const app = express();
@@ -20,14 +22,26 @@ app.use(bodyParser.json());
 // serve static files from public dir
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/containers", express.static(path.join(__dirname, "public")));
+app.use("/images", express.static(path.join(__dirname, "public")));
 
 // define routers
 app.use("/dashboard/", dashboardRoutes);
 app.use("/containers/", containersRoutes);
+app.use("/images/", imagesRoutes);
+
+
+// collect data every second
+const interval = 1000;
+setInterval(collectData, interval)
+
+function collectData(){
+    model.fetchContainers();
+    model.fetchImages();
+    model.fetchHostStats();
+}
 
 // default route will (at this stage) redirect the user to the dashboard without authentication
 app.get("/", (req, res) => {
-    //res.redirect("/containers/6f5460e289bf283779ec993a0d7dd6f3764d838f87c46b85c15ef0491037ff44");
     res.redirect("/dashboard");
 });
 

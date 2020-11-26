@@ -1,4 +1,3 @@
-const si = require("systeminformation");
 const { model } = require("../models/model");
 
 const containerController = {
