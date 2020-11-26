@@ -3,6 +3,7 @@ const si = require("systeminformation");
 const { DeepstreamClient } = require('@deepstream/client');
 const isEqual = require("lodash.isequal");
 const isEmpty = require("lodash.isempty");
+const utils = require("../utils/utils.js");
 
 
 // Initialize global vars
@@ -10,8 +11,11 @@ const client = new DeepstreamClient('localhost:6020');          // connect to De
 docker = new Docker({ socketPath: "/var/run/docker.sock" });    // connect to Docker unix socket
 const containerListName = "containerList";  // name of list containing registered container in Deepstream.io
 
-imageData = {};
-containerData = {};
+let imageData = {};
+let containerData = {};
+let hostStats = {};
+
+const observers = new Map();
 
 const model = {
     /**
@@ -36,72 +40,110 @@ const model = {
     },
 
     /**
-     * Get data on running containers on a host. Returned data from last call is cached internally and used to determine whether new data is available.
-     * If no new data is available false is returned. Otherwise the new data will be returned.
-     * Only data specified in the @param fields list will be returned, cached and compared. Possible fields are the ones defined by the Docker API. Look at the reference for further information. 
-     * If @param allStates is true, all containers will be returned.
+     * Add an observer category 
+     * @param {String} catName category name 
+     */
+    addObserverCategory: (catName) => {
+        observers.set(catName, []);
+    },
+
+    /**
+     * Returns the latest container information available
+     * @returns list of container data
+     */
+    getContainers: async () => {
+        if (containerData === undefined) {
+            containerData = await model.fetchContainers();
+        }
+        return containerData;
+    },
+
+    /**
+     * Get data on containers on a host and cache it in RAM.
      * @param {boolean} allStates get containers in all possible states
-     * @param {boolean} returnVal default: true; when false current container data is retrieved from Docker runtime and compared and only returned if changedcache is not used and current cached data should be compared with the new
      * @param {fields}  fields list of fields to be returned
-     * @returns {Dockerode.ContainerInfo[]} list of (running) containers or false if data has not changed
      */
-    getContainers: async (allStates, returnVal = false, fields = ["State", "Id", "Names", "Image", "Command"]) => {
-        if (returnVal && !isEmpty(containerData)) {
-            return containerData;
-        }
+    fetchContainers: async (allStates = true, fields = ["State", "Id", "Names", "Image", "Command"]) => {
         const newContainerData = await docker.listContainers({ all: allStates });
+        const filteredNewContainers = await utils.filterObjectList(newContainerData, fields);
 
-        // extract, compare and cache only relevant data
-        const newContainerList = [];
-        newContainerData.forEach(container => {
-            let trimmedNewContainerData = {};
-            fields.forEach(field => {
-                trimmedNewContainerData[field] = container[field];
-            });
-            newContainerList.push(trimmedNewContainerData);
-        });
-        if (returnVal || !isEqual(newContainerList, containerData)) {
-            // console.log("New container data: \n" + JSON.stringify(newContainerList));
-            // console.log("Old container data: \n" + JSON.stringify(containerData));
-            containerData = newContainerList;
-            return newContainerList;
+        if (!isEqual(filteredNewContainers, containerData)) {
+            containerData = filteredNewContainers;
+            model.notifyAll("containers", filteredNewContainers);
         }
-        return false;
     },
 
     /**
-     * Get all images stored on a host
-     * @param {boolean} returnVal default: true; when false current container data is retrieved from Docker runtime and compared and only returned if changedcache is not used and current cached data should be compared with the new
-     * @returns {Dockerode.ImageInfo[]}
+     * Get details to the container image specified with @param id (Image-ID or name).
+     * @param {String} id Image-ID or Image name
      */
-    getImages: async (returnVal = false) => {
-        if (returnVal && !isEmpty(imageData)) {
-            return imageData;
+    getImage: async (id, fields = ["Id", "Comment", "Os", "Architecture", "VirtualSize", "Size", "Author", "Created", "Config", "RootFS"]) => {
+        const image = docker.getImage(id);
+        imageData = await image.inspect();
+        filteredImages = await utils.filterObject(imageData, fields);
+        return filteredImages;
+    },
+
+    /**
+     * Get details to the container image specified with @param id (Image-ID or name).
+     * @param {String} id Image-ID or Image name
+     */
+    getImageHistory: async (id, fields = []) => {
+        const image = docker.getImage(id);
+        const history = image.history();
+
+        filteredImgH = await utils.filterObjectList(filteredImgH, fields);
+
+        return filteredImgH;
+    },
+
+    /**
+     * Get latest image data.
+     */
+    getImages: async () => {
+        if (imageData === undefined) {
+            imageData = await model.fetchImages();
         }
+        return imageData;
+    },
+
+    /**
+     * Get all images stored on a host and cache it.
+     */
+    fetchImages: async () => {
         const newImageData = await docker.listImages();
-        if (returnVal || !isEqual(newImageData, imageData)) {
+        if (!isEqual(newImageData, imageData)) {
             imageData = newImageData;
-            return newImageData;
+            model.notifyAll("images", newImageData);
         }
-        return false;
     },
 
     /**
-     * Get current stats from host
+     * Get latest stats from host
      */
-    getHostCurrentStats: async () => {
+    getHostStats: async () => {
+        if (hostStats === undefined){
+            hostStats = await model.fetchHostStats();
+        }
+        return hostStats;
+    },
+
+    fetchHostStats: async () => {
         const desiredStats = {
             currentLoad: "currentload",
             mem: "used, free"
+        };
+        newHostStats = await si.get(desiredStats);
+        if (!isEqual(newHostStats, hostStats)) {
+            hostStats = newHostStats;
+            model.notifyAll("hostStats", newHostStats);
         }
-
-        return await si.get(desiredStats);
     },
 
     /**
      * Get live runtime information 
      * @param {String} id Container-ID (SHA-256)
-     * @callback Executed every time the runtime information changes
+     * @callback cb Executed every time the runtime information changes
      * @param {any} data Runtime information of container
      */
     subscribeRuntimeInfoFromContainer: async (id, cb) => {
@@ -113,17 +155,6 @@ const model = {
             };
         }
         curContainer = await client.record.getRecord(`${containerListName}/${id}`).subscribe(cb);
-    },
-
-    /**
-     * Unsubscribe from updates from a container
-     * @param {String} id Container-ID (SHA-256)
-     */
-    unsubscribeRuntimeInfoFromContainer: async (id, cb) => {
-        const containerList = await client.record.getList(containerListName).whenReady();
-        if (containerList.getEntries().find(recordName => recordName === `${containerListName}/${id}`)) {
-            curContainer = await client.record.getRecord(`${containerListName}/${id}`).unsubscribe();
-        }
     },
 
     /**
@@ -158,7 +189,34 @@ const model = {
                 console.log(`Nothing done. Action ${action} is unknown.`);
         };
     },
+
+    /**
+     * Subscribe to an event. 
+     * @param {String} kind either "images", "containers" or "host"
+     * @param {any} callback Callback with changed data
+     */
+    subscribeInfo: async (kind, callback) => {
+        if (!(typeof callback === "function")) {
+            callback = () => { };  // redefine to empty method to prevent errors
+        }
+        if (!observers.has(kind)) {
+            console.error(`Cannot subsribe to unknown kind ${kind}.`);
+            return undefined;
+        }
+        observers.get(kind).push(callback);
+    },
+
+    notifyAll: (kind, data) => {
+        if (!observers.has(kind)) {
+            return console.error(`Cannot notify subscribers to unknown kind ${kind}.`);
+        }
+        observers.get(kind).forEach(it => it(data));
+    },
 };
+
+model.addObserverCategory("containers");
+model.addObserverCategory("images");
+model.addObserverCategory("hostStats");
 
 model.login2Deepstream();
 

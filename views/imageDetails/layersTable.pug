@@ -1,0 +1,16 @@
+-
+    function formatId(imgId){
+        return imgId.substring(7);
+    }
+
+table(class="table table-hover mt-4" id="layer-table")
+    thead
+        tr
+            th LAYER
+            th ID
+    tbody
+        each layer in layers
+            - const imgId = formatId(layer.number)
+            tr 
+                td(style="width: 15%;")= imgId
+                td(style="width: wrap-content;")= layer.Id

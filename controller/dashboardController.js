@@ -2,6 +2,7 @@ const { model } = require("../models/model");
 const pug = require("pug");
 const path = require('path');
 const isEmpty = require("lodash.isempty");
+const utils = require("../utils/utils");
 
 
 // compile templates once and so the only need to be rendered for each data update
@@ -20,9 +21,14 @@ const dashboardController = {
     showDashboard: async (req, res) => {
         try {
             // get containers
+<<<<<<< HEAD
             const containers = await model.getContainers(true, returnVal = true);
             const images = await model.getImages(returnVal = true);
             stateCount = model.getStateCount(containers);
+=======
+            const containers = await model.getContainers();
+            const images = await model.getImages();
+>>>>>>> container-images
 
             // render view
             res.render("dashboard/dashboard", {
@@ -36,64 +42,43 @@ const dashboardController = {
         }
     },
 
-    sendUpdate: async (ws, req) => {
-        events = [];
-
-        /**
-         * Create a new event and push it on the event queue to be sent to the client
-         * @param {string} eventName unique event name
-         * @param {Object} eventData data to be assigned to event
-         */
-        function pushEventQueue(eventName, eventData) {
-            events.push(
-                {
-                    eventName: eventName,
-                    eventData: eventData,
-                });
-        }
-
-        /**
-         * Send a queue of events to client
-         * @param {[Event]} events
-         * @todo implement propper error handling
-         */
-        function sendUpdateEvents(events) {
-            try {
-                ws.send(JSON.stringify(events));
-            } catch (error) {
-                // TODO: implement propper error handling
-            }
-        }
-
-        const stats = model.getHostCurrentStats();
+    sendLiveInfo: async (ws, req) => {
+        // get and send current info
+        const containers = model.getContainers();
         const images = model.getImages();
-        const containers = await model.getContainers(true);
+        const hostStats = model.getHostStats();
 
-        if (containers) {
-            const stateCount = model.getStateCount(containers);
-            pushEventQueue("updateContainer", {
-                containerTableHtml: containerTableTempl({ containers: containers }),
-                stateCount: stateCount,
+        utils.sendEvent(ws,"updateContainers", {
+            containerTableHtml: containerTableTempl({ containers: await containers }),
+            stateCount: model.getStateCount(await containers),
+        });
+        utils.sendEvent(ws,"updateImages", {
+            imageTableHtml: imageTableTempl({ images: await images }),
+        });
+        utils.sendEvent(ws,"updateHostStats", await hostStats);
+
+        // subscribe to events to keep client updated
+        model.subscribeInfo("containers", (data) => {
+            utils.sendEvent(ws,"updateContainers", {
+                containerTableHtml: containerTableTempl({ containers: data }),
+                stateCount: model.getStateCount(data),
             });
-        }
-        if (await images) {
-            pushEventQueue("updateImages", {
-                imageTableHtml: imageTableTempl({ images: images })
+        });
+
+        model.subscribeInfo("images", (data) => {
+            utils.sendEvent(ws,"updateImages", {
+                imageTableHtml: imageTableTempl({ images: data }),
             });
-        }
-        if (!isEmpty(stateCount)) {
-            pushEventQueue("regularUpdate", {
-                hostStats: await stats,
-                stateCount: stateCount,
-            });
-            stateCount = {};
-        }
-        else {
-            pushEventQueue("regularUpdate", {
-                hostStats: await stats,
-            });
+<<<<<<< HEAD
         }
         sendUpdateEvents(events);
+=======
+        });
+
+        model.subscribeInfo("hostStats", (data) => {
+            utils.sendEvent(ws, "updateHostStats", data);
+        });
+>>>>>>> container-images
     },
 }
 module.exports.dashboardController = dashboardController;

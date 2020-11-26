@@ -1,0 +1,15 @@
+extends ../layout
+block append styles
+    link(rel="stylesheet" href="css/imageDetails.css")
+block append scripts
+block content
+    div(class="border-bottom pt-3")
+        h1 Image Details
+    div(class="col-12 card-deck p-0 pt-3")
+        //- include card_imageHeader
+        include card_imageInfo
+        include card_imageLayers
+    //- div(class="col-12 p-0 pt-3 pr-4")
+    //-     include card_containerTable
+    //- div(class="col-12 p-0 pt-3 pr-4")
+    //-     include card_imageTable
