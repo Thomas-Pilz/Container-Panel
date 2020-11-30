@@ -7,7 +7,7 @@ const utils = require("../utils/utils.js");
 
 
 // Initialize global vars
-const client = new DeepstreamClient('localhost:6020');          // connect to Deepstream server
+const client = new DeepstreamClient('deepstream:6020');          // connect to Deepstream server
 docker = new Docker({ socketPath: "/var/run/docker.sock" });    // connect to Docker unix socket
 const containerListName = "containerList";  // name of list containing registered container in Deepstream.io
 
