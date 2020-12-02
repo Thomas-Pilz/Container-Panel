@@ -3,6 +3,7 @@ const pug = require("pug");
 const path = require('path');
 const isEmpty = require("lodash.isempty");
 const utils = require("../utils/utils");
+const formatter = require("../utils/formatter");
 
 
 // compile templates once and so the only need to be rendered for each data update
@@ -23,6 +24,11 @@ const dashboardController = {
             // get containers
             const containers = await model.getContainers();
             const images = await model.getImages();
+
+            // format output
+            // containers
+
+            // images
 
             // render view
             res.render("dashboard/dashboard", {

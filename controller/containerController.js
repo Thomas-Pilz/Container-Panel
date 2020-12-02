@@ -12,6 +12,7 @@ const containerController = {
             res.status(500).send(exception)
         }
     },
+    
     showContainer: async (req, res) => {
         try {
             res.render("containerDetails/containerDetails", {
@@ -39,7 +40,7 @@ const containerController = {
     },
 
     /**
-     * Uns
+     * Unsubsribe from receiving container 
      */
     unsubscribeRuntimeInfoFromContainer: async (ws, req) => {
         model.unsubscribeRuntimeInfoFromContainer(req.params.id);

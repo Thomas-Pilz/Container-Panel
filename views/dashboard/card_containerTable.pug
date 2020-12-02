@@ -1,7 +1,7 @@
-extends ../templates/card_footer_templ
+extends ../templates/card_footerless_templ
 block card-body
-    icon(class="fab fa-docker fa-2x pr-3")
-    span(class="class-title" style="font-size: 1.5rem;") Containers
+    i.fab.fa-docker.fa-2x.pr-3
+    span.class-title.card-title Containers
     div(id="containerTable-parent")
         include containerTable
         

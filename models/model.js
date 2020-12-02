@@ -3,6 +3,7 @@ const si = require("systeminformation");
 const { DeepstreamClient } = require('@deepstream/client');
 const isEqual = require("lodash.isequal");
 const isEmpty = require("lodash.isempty");
+const clonedeep = require("lodash.clonedeep");
 const utils = require("../utils/utils.js");
 
 
@@ -14,6 +15,7 @@ const containerListName = "containerList";  // name of list containing registere
 let imageData = {};
 let containerData = {};
 let hostStats = {};
+let imageHistory = {};
 
 const observers = new Map();
 
@@ -52,8 +54,8 @@ const model = {
      * @returns list of container data
      */
     getContainers: async () => {
-        if (containerData === undefined) {
-            containerData = await model.fetchContainers();
+        if (isEmpty(containerData)) {
+            await model.fetchContainers();
         }
         return containerData;
     },
@@ -61,7 +63,7 @@ const model = {
     /**
      * Get data on containers on a host and cache it in RAM.
      * @param {boolean} allStates get containers in all possible states
-     * @param {fields}  fields list of fields to be returned
+     * @param {String[]}  fields list of fields to be returned
      */
     fetchContainers: async (allStates = true, fields = ["State", "Id", "Names", "Image", "Command"]) => {
         const newContainerData = await docker.listContainers({ all: allStates });
@@ -76,32 +78,51 @@ const model = {
     /**
      * Get details to the container image specified with @param id (Image-ID or name).
      * @param {String} id Image-ID or Image name
+     * @param {String[]}  fields list of fields to be returned
      */
-    getImage: async (id, fields = ["Id", "Comment", "Os", "Architecture", "VirtualSize", "Size", "Author", "Created", "Config", "RootFS"]) => {
+    getImage: async (id, fields = ["Id", "Comment", "Os", "Architecture", "VirtualSize", "Size", "Author", "Created", "Config"]) => {
         const image = docker.getImage(id);
         imageData = await image.inspect();
+        // RootFS is required to get info about layers
+        fields.push("RootFS");
         filteredImages = await utils.filterObject(imageData, fields);
+
         return filteredImages;
     },
 
     /**
      * Get details to the container image specified with @param id (Image-ID or name).
      * @param {String} id Image-ID or Image name
+     * @returns {ImageHistory[]} list of image history objects
      */
-    getImageHistory: async (id, fields = []) => {
+    getImageHistory: async (id) => {
+        if (isEmpty(imageHistory)) {
+            await model.fetchImageHistory(id);
+        }
+        return await clonedeep(imageHistory);     
+    },
+
+    /**
+     * Fetch latest image history data from Docker API.
+     * @param {String} id Image-ID or image name
+     * @param {String[]} fields list of fields to be returned
+     */
+    fetchImageHistory: async (id, fields = ["Id", "Created", "CreatedBy", "Tags", "Size", "Comment"]) => {
+        
         const image = docker.getImage(id);
-        const history = image.history();
-
-        filteredImgH = await utils.filterObjectList(filteredImgH, fields);
-
-        return filteredImgH;
+        const newImageHistory = await image.history();
+        const filteredImageHistory = await utils.filterObjectList(newImageHistory, fields);
+        if(!isEqual(filteredImageHistory, imageHistory)){
+            imageHistory = filteredImageHistory;
+            // model.notifyAll("")
+        };
     },
 
     /**
      * Get latest image data.
      */
     getImages: async () => {
-        if (imageData === undefined) {
+        if (isEmpty(imageData)) {
             imageData = await model.fetchImages();
         }
         return imageData;
@@ -122,7 +143,7 @@ const model = {
      * Get latest stats from host
      */
     getHostStats: async () => {
-        if (hostStats === undefined){
+        if (isEmpty(hostStats)){
             hostStats = await model.fetchHostStats();
         }
         return hostStats;
@@ -149,12 +170,21 @@ const model = {
     subscribeRuntimeInfoFromContainer: async (id, cb) => {
         const containerList = await client.record.getList(containerListName).whenReady();
         if (!containerList.getEntries().find(recordName => recordName === `${containerListName}/${id}`)) {
-            console.log(`No runtime information available for container ${id}`);
+            console.error(`No runtime information available for container ${id}.`);
             return {
-                err: `No runtime information available for container ${id}`
+                err: `No runtime information available for container ${id}.`
             };
         }
         curContainer = await client.record.getRecord(`${containerListName}/${id}`).subscribe(cb);
+    },
+
+    unsubscribeRuntimeInfoFromContainer: async (id) => {
+        const containerList = await client.record.getList(containerListName).whenReady();
+        if (!containerList.getEntries().find(recordName => recordName === `${containerListName}/${id}`)) {
+            console.error(`Container ${id} does not exist.`);
+            return;
+        }
+        curContainer = client.record.getRecord(`${containerListName}/${id}`).unsubscribe();
     },
 
     /**

@@ -1,0 +1,21 @@
+table.table.table-hover.mt-4(id="imageHistory-table")
+    thead
+        tr
+            th ID
+            th CREATED ON
+            th CREATED BY
+            th TAGS
+            th SIZE
+            th COMMENT
+    tbody
+        each ih in imageHistory
+            tr
+                td(style="width: 5%; max-width: 5%;")= ih.Id
+                td.text-right= ih.Created
+                td(style="width: wrap-content;")= ih.CreatedBy
+                td(style="max-width: 50px;")
+                    each tag in ih.Tags
+                        span= tag
+                        br
+                td.text-right(style="width: wrap-content;")= ih.Size
+                td= ih.Comment

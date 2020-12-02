@@ -27,14 +27,14 @@ block card-body
             const date = new Date(timeInSeconds * 1000);
             return date.toLocaleString('de-DE');
         }
-    i.fas.fa-info-circle.fa-2x.pr-3
-    span.class-title.card-title Information
-    div.row.text-left.m-2.mt-4(id="image-info")
-        for key in Object.keys(info)
-            if infoLabels.hasOwnProperty(key)
+    i.fas.fa-cog.fa-2x.pr-3
+    span.class-title.card-title Configuration
+    div.row.m-2.mt-4.text-left(id="image-config")
+        for key in Object.keys(config)
+            if configLabels.hasOwnProperty(key)
                 - 
-                    const label = infoLabels[key];
-                    let val = info[key];
+                    const label = configLabels[key];
+                    let val = config[key];
                     if (!val && typeof(val) != "boolean"){
                         val = "-";
                     }
@@ -48,3 +48,4 @@ block card-body
                                     li= line
                         else
                             span= val
+                
