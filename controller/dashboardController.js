@@ -21,14 +21,8 @@ const dashboardController = {
     showDashboard: async (req, res) => {
         try {
             // get containers
-<<<<<<< HEAD
-            const containers = await model.getContainers(true, returnVal = true);
-            const images = await model.getImages(returnVal = true);
-            stateCount = model.getStateCount(containers);
-=======
             const containers = await model.getContainers();
             const images = await model.getImages();
->>>>>>> container-images
 
             // render view
             res.render("dashboard/dashboard", {
@@ -69,16 +63,11 @@ const dashboardController = {
             utils.sendEvent(ws,"updateImages", {
                 imageTableHtml: imageTableTempl({ images: data }),
             });
-<<<<<<< HEAD
-        }
-        sendUpdateEvents(events);
-=======
         });
 
         model.subscribeInfo("hostStats", (data) => {
             utils.sendEvent(ws, "updateHostStats", data);
         });
->>>>>>> container-images
     },
 }
 module.exports.dashboardController = dashboardController;
