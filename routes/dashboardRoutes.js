@@ -13,19 +13,6 @@ router
 
 // routes for websockets
 router.ws('/', (ws, req) => {
-<<<<<<< HEAD
-    console.log(`/dashboard: Client connected.`);
-    const intervalTime = 1000;
-    dashboardController.sendUpdate(ws, req)
-    ws.on('message', msg => {
-        setTimeout(() => {
-            dashboardController.sendUpdate(ws, req)
-        }, intervalTime);
-    });
-    ws.on("close",(code, reason) => { 
-        console.log(`Dashboard: WebSocket connection closed. \nCode: ${code}\tReason: ${reason}`)
-    });
-=======
     dashboardController.sendLiveInfo(ws, req);
     // const intervalTime = 1000;
     // dashboardController.sendUpdate(ws, req)
@@ -37,7 +24,6 @@ router.ws('/', (ws, req) => {
     // ws.on("close",(code, reason) => { 
     //     console.log(`Dashboard: WebSocket connection closed. \nCode: ${code}\tReason: ${reason}`);
     // });
->>>>>>> container-images
 });  
 
 module.exports = router;

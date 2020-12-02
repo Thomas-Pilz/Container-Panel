@@ -2,3 +2,7 @@
 tr[data-js-href]{
     cursor: pointer;
 }
+
+.card-title{
+    font-size: 1.5rem;
+}

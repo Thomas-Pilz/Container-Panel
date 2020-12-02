@@ -192,19 +192,8 @@ function startWebsocketClient(){
     const serverSocketUrl = socketProtocol + "//" + window.location.hostname + ":" + window.location.port + window.location.pathname
     const socket = new WebSocket(serverSocketUrl);
 
-<<<<<<< HEAD
-socket.onopen = e => {
-    console.log(`connection to ${serverSocketUrl} established.`);
-};
-
-socket.onmessage = (e) => {
-    socket.send("");
-    const data = JSON.parse(e.data);
-    data.forEach(updateEvent => {
-=======
     socket.onmessage = (e) => {
         const updateEvent = JSON.parse(e.data);
->>>>>>> container-images
         eventData = updateEvent.eventData;
         switch (updateEvent.eventName) {
             case "updateHostStats":
