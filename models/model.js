@@ -57,7 +57,7 @@ const model = {
         if (isEmpty(containerData)) {
             await model.fetchContainers();
         }
-        return containerData;
+        return await clonedeep(containerData);
     },
 
     /**
@@ -66,12 +66,11 @@ const model = {
      * @param {String[]}  fields list of fields to be returned
      */
     fetchContainers: async (allStates = true, fields = ["State", "Id", "Names", "Image", "Command"]) => {
-        const newContainerData = await docker.listContainers({ all: allStates });
+        const newContainerData = await docker.listContainers({ all: allStates }).catch(err => console.error("Failed to retrieve container list.\nError:\n" + err));
         const filteredNewContainers = await utils.filterObjectList(newContainerData, fields);
-
         if (!isEqual(filteredNewContainers, containerData)) {
             containerData = filteredNewContainers;
-            model.notifyAll("containers", filteredNewContainers);
+            model.notifyAll("containers", clonedeep(filteredNewContainers));    // return copy! do not allow others to modify global vars
         }
     },
 
@@ -82,12 +81,12 @@ const model = {
      */
     getImage: async (id, fields = ["Id", "Comment", "Os", "Architecture", "VirtualSize", "Size", "Author", "Created", "Config"]) => {
         const image = docker.getImage(id);
-        imageData = await image.inspect();
+        newImageData = await image.inspect().catch(err => console.error("Failed to retrieve image information.\nError:\n" + err));
         // RootFS is required to get info about layers
         fields.push("RootFS");
-        filteredImages = await utils.filterObject(imageData, fields);
+        filteredImages = await utils.filterObject(newImageData, fields);
 
-        return filteredImages;
+        return await clonedeep(filteredImages);
     },
 
     /**
@@ -110,11 +109,11 @@ const model = {
     fetchImageHistory: async (id, fields = ["Id", "Created", "CreatedBy", "Tags", "Size", "Comment"]) => {
         
         const image = docker.getImage(id);
-        const newImageHistory = await image.history();
+        const newImageHistory = await image.history().catch(err => console.error("Failed to retrieve image history information.\nError:\n" + err));
         const filteredImageHistory = await utils.filterObjectList(newImageHistory, fields);
         if(!isEqual(filteredImageHistory, imageHistory)){
             imageHistory = filteredImageHistory;
-            // model.notifyAll("")
+            // model.notifyAll("", clonedeep())
         };
     },
 
@@ -123,19 +122,21 @@ const model = {
      */
     getImages: async () => {
         if (isEmpty(imageData)) {
-            imageData = await model.fetchImages();
+            await model.fetchImages();
         }
-        return imageData;
+        return await clonedeep(imageData);
     },
 
     /**
      * Get all images stored on a host and cache it.
+     * @param {String[]} fields list of fields to be returned
      */
-    fetchImages: async () => {
-        const newImageData = await docker.listImages();
-        if (!isEqual(newImageData, imageData)) {
-            imageData = newImageData;
-            model.notifyAll("images", newImageData);
+    fetchImages: async (fields = ["Id", "RepoTags", "Created", "Size"]) => {
+        const newImageData = await docker.listImages().catch(err => console.error("Failed to retrieve image list.\nError:\n" + err));
+        const newfilteredImageData = await utils.filterObjectList(newImageData, fields);
+        if (!isEqual(newfilteredImageData, imageData)) {
+            imageData = newfilteredImageData;
+            model.notifyAll("images", clonedeep(newfilteredImageData));
         }
     },
 
@@ -144,9 +145,9 @@ const model = {
      */
     getHostStats: async () => {
         if (isEmpty(hostStats)){
-            hostStats = await model.fetchHostStats();
+            hostStats = await model.fetchHostStats().catch(err => console.error("Failed to retrieve host stats."));
         }
-        return hostStats;
+        return await clonedeep(hostStats);
     },
 
     fetchHostStats: async () => {
@@ -157,7 +158,7 @@ const model = {
         newHostStats = await si.get(desiredStats);
         if (!isEqual(newHostStats, hostStats)) {
             hostStats = newHostStats;
-            model.notifyAll("hostStats", newHostStats);
+            model.notifyAll("hostStats", clonedeep(newHostStats));
         }
     },
 
@@ -208,15 +209,15 @@ const model = {
         const container = docker.getContainer(containerId);
         switch (action) {
             case "stop":
-                await container.stop();
+                await container.stop().catch(err => console.error(`Failed to stop container ${containerId}\nError:\n${err}`));
                 console.log(`Stopped container ${containerId}.`);
                 break;
             case "restart":
-                await container.restart();
+                await container.restart().catch(err => console.error(`Failed to restart container ${containerId}\nError:\n${err}`));
                 console.log(`Restarted container ${containerId}.`);
                 break;
             default:
-                console.log(`Nothing done. Action ${action} is unknown.`);
+                console.error(`Nothing done. Action ${action} is unknown.`);
         };
     },
 
@@ -242,7 +243,7 @@ const model = {
         }
         observers.get(kind).forEach(it => it(data));
     },
-};
+}; 
 
 model.addObserverCategory("containers");
 model.addObserverCategory("images");

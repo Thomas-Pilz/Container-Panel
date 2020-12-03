@@ -18,7 +18,7 @@ const imagesController = {
         try {
             const imageDetails = await model.getImage(req.params.id);
             const imageHistory = await model.getImageHistory(req.params.id);
-
+            
             let layers = [];
             if (imageDetails.RootFS.Type.toLowerCase() === "layers".toLowerCase()){
                 layers = imageDetails.RootFS.Layers;
@@ -34,7 +34,7 @@ const imagesController = {
             imageDetails.VirtualSize = formatter.formatSize(imageDetails.VirtualSize);
             imageDetails.Created = formatter.formatDateString(imageDetails.Created);
 
-            // history
+            // // history
             imageHistory.forEach(it => {
                 if (it.Tags === null){
                     it.Tags = [];

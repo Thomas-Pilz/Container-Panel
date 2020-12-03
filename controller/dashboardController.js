@@ -22,13 +22,15 @@ const dashboardController = {
     showDashboard: async (req, res) => {
         try {
             // get containers
-            const containers = await model.getContainers();
-            const images = await model.getImages();
+            let containers = await model.getContainers();
+            let images = await model.getImages();
 
             // format output
             // containers
+            containers = formatter.formatContainers(containers);
 
             // images
+            images = formatter.formatImages(images);
 
             // render view
             res.render("dashboard/dashboard", {
@@ -44,28 +46,40 @@ const dashboardController = {
 
     sendLiveInfo: async (ws, req) => {
         // get and send current info
-        const containers = model.getContainers();
-        const images = model.getImages();
+        let containers = model.getContainers();
+        let images = model.getImages();
         const hostStats = model.getHostStats();
+        const stateCount = model.getStateCount(await containers);
 
+        // containers
+        containers = formatter.formatContainers(await containers);
         utils.sendEvent(ws,"updateContainers", {
-            containerTableHtml: containerTableTempl({ containers: await containers }),
-            stateCount: model.getStateCount(await containers),
+            containerTableHtml: containerTableTempl({ containers: containers }),
+            stateCount: stateCount,
         });
+
+        // images
+        images = formatter.formatImages(await images);
         utils.sendEvent(ws,"updateImages", {
-            imageTableHtml: imageTableTempl({ images: await images }),
+            images: images,
+            imageTableHtml: imageTableTempl({ images: images }),
         });
+
+        // host stats
         utils.sendEvent(ws,"updateHostStats", await hostStats);
 
         // subscribe to events to keep client updated
         model.subscribeInfo("containers", (data) => {
+            const stateCount = model.getStateCount(data)
+            data = formatter.formatContainers(data);
             utils.sendEvent(ws,"updateContainers", {
                 containerTableHtml: containerTableTempl({ containers: data }),
-                stateCount: model.getStateCount(data),
+                stateCount: stateCount,
             });
         });
 
         model.subscribeInfo("images", (data) => {
+            data = formatter.formatImages(data);
             utils.sendEvent(ws,"updateImages", {
                 imageTableHtml: imageTableTempl({ images: data }),
             });

@@ -65,7 +65,35 @@ function formatDateString(dateString){
     return date.toLocaleString('de-DE');
 }
 
+/**
+ * Format list of containers
+ * @param {any[]} containers list of containers
+ * @returns {any[]} formatted list of containers 
+ */
+function formatContainers(containers){
+    return containers;
+}
+
+/**
+ * Format list of images
+ * @param {any[]} images list of images
+ * @returns {any[]} formatted list of images 
+ */
+function formatImages(images){
+    images.forEach(it => {
+        it.Id = formatId(it.Id);
+        it.Created = formatDate(it.Created);
+        it.Size = formatSize(it.Size);
+        if(it.RepoTags === null){
+            it.RepoTags = [];
+        }
+    });
+    return images;
+}
+
 module.exports.formatSize = formatSize;
 module.exports.formatDate = formatDate;
 module.exports.formatId = formatId;
 module.exports.formatDateString = formatDateString;
+module.exports.formatImages = formatImages;
+module.exports.formatContainers = formatContainers;
