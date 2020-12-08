@@ -4,10 +4,6 @@ html {
     ;
 }
 
-tr[data-js-href] {
-    cursor: pointer;
-}
-
 .section-title{
     font-size: 2rem;
 }
