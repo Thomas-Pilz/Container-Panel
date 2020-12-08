@@ -46,15 +46,17 @@ window.onload = (e) => {
     // establish websocket connection to server
     startWebsocketClient();
 
-    // TEST ONLY
-    // test chart update functionality
-    setInterval(testUpdate, 1000);
+    // // TEST ONLY
+    // // test chart update functionality
+    // setInterval(testChartUpdate, 1000);
 };
 
 /**
- * @todo TEST ONLY: delete this method after test has finished successfully
+ * @todo TEST ONLY: method called to generate random test data
+ * 
+ * Generate random test data for all charts
  */
-function testUpdate() {
+function testChartUpdate() {
     // resource usage and processes
     updateProcessesByStateChart(randomIntBetween(5), randomIntBetween(5), randomIntBetween(5), randomIntBetween(5));
 
@@ -75,6 +77,8 @@ function testUpdate() {
 }
 
 /**
+ * @todo TEST ONLY: method called to generate random test data
+ * 
  * Calculates a random integer.
  * @param {Int} start start value, default 0
  * @param {Int} end end value
@@ -98,7 +102,28 @@ function startWebsocketClient() {
 
     socket.onmessage = (e) => {
         runtimeInfo = JSON.parse(e.data);
-        console.log(runtimeInfo);
+
+        // update HTML tables
+        updateHTMLTable("processes-table", runtimeInfo.procsTabHTML);
+        updateHTMLTable("network-interfaces-table", runtimeInfo.netInfsHTML);
+
+        // resource usage and processes
+        updateProcessesByStateChart(randomIntBetween(5), randomIntBetween(5), randomIntBetween(5), randomIntBetween(5));
+
+        const colGen = colorGenerator();
+        const valObj1 = { label: "Test1", data: 34, backgroundColor: colGen.next().value };
+        const valObj2 = { label: "Test2", data: 49, backgroundColor: colGen.next().value };
+        const valObj3 = { label: "Test3", data: 41, backgroundColor: colGen.next().value };
+        updatePerProcessChart(cpuUsageByProcessChart, [valObj1, valObj2, valObj3]);
+        updatePerProcessChart(ramUsageByProcessChart, [valObj1, valObj2, valObj3]);
+
+        // network charts
+        updateNWtotalChart(randomIntBetween(50), randomIntBetween(50), randomIntBetween(50), randomIntBetween(50), randomIntBetween(50), randomIntBetween(50));
+        updateNWperSecChart(randomIntBetween(50), randomIntBetween(50));
+
+        // disk charts
+        updateIOperSecChart(randomIntBetween(50), randomIntBetween(50));
+        updateIOtotalChart(randomIntBetween(50), randomIntBetween(50));
     };
 }
 
@@ -256,8 +281,8 @@ function updatePerProcessChart(chart, usageProcesses) {
 function* colorGenerator() {
     let i = 0;
     const keys = Object.keys(colors);
-    while(true){
-        if (i === keys.length){
+    while (true) {
+        if (i === keys.length) {
             i = 0;
         }
         yield colors[keys[i++]];
@@ -636,4 +661,18 @@ function updateNWperSecChart(rTraffic, tTraffic) {
 
     // update chart
     nwPerSecChart.update();
+}
+
+/**
+ * Replaces a HTML table identified by @param id with the HTML specified in @param newTableHTML in the DOM.
+ * @param {String} id 
+ * @param {String} newTableHTML 
+ */
+function updateHTMLTable(id, newTableHTML){
+    // get table
+    const oldTab = document.getElementById(id);
+    // get parent of table
+    const tabParent = oldTab.parentElement;
+    // replace child
+    tabParent.replaceChild(oldTab, newTableHTML);
 }
