@@ -3,13 +3,4 @@ block card-header
     i.fas.fas.fa-table.pr-3
     span.font-weight-bold.card-title Network Interfaces
 block card-body
-    table#network-interfaces-table.table.table-hover.table-responsive-sm.table-responsive-md.table-responsive-lg.table-responsive-xl
-        thead
-            tr
-                th NAME
-                th STATE
-        tbody
-            each netInf in netInfs
-                tr 
-                    td(style="width: 15%;")= netInf.iface
-                    td(style="width: wrap-content;")= netInf.operstate
+    include networkInterfacesTable

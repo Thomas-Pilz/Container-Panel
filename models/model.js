@@ -35,9 +35,9 @@ const model = {
     getNav: () => {
         return [
             { href: "/dashboard", text: "Dashboard", iconClass: "fas fa-th fa-lg pr-3 text-white" },
-            { href: "/containers", text: "Container", iconClass: "fab fa-docker fa-lg pr-3 text-white" },
-            { href: "/images", text: "Images", iconClass: "far fa-clone fa-lg pr-3 text-white" },
-            { href: "/ressources", text: "Ressources", iconClass: "fas fa-server fa-lg pr-3 text-white" },
+            // { href: "/containers", text: "Container", iconClass: "fab fa-docker fa-lg pr-3 text-white" },
+            // { href: "/images", text: "Images", iconClass: "far fa-clone fa-lg pr-3 text-white" },
+            // { href: "/ressources", text: "Ressources", iconClass: "fas fa-server fa-lg pr-3 text-white" },
         ];
     },
 
@@ -124,7 +124,7 @@ const model = {
         if (isEmpty(imageData)) {
             await model.fetchImages();
         }
-        return await clonedeep(imageData);
+        return clonedeep(imageData);
     },
 
     /**
