@@ -124,7 +124,7 @@ const model = {
         if (isEmpty(imageData)) {
             await model.fetchImages();
         }
-        return await clonedeep(imageData);
+        return clonedeep(imageData);
     },
 
     /**

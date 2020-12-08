@@ -103,28 +103,45 @@ function startWebsocketClient() {
     socket.onmessage = (e) => {
         runtimeInfo = JSON.parse(e.data);
 
-        // update HTML tables
-        updateHTMLTable("processes-table", runtimeInfo.procsTabHTML);
-        updateHTMLTable("network-interfaces-table", runtimeInfo.netInfsHTML);
-
-        // resource usage and processes
-        updateProcessesByStateChart(randomIntBetween(5), randomIntBetween(5), randomIntBetween(5), randomIntBetween(5));
-
-        const colGen = colorGenerator();
-        const valObj1 = { label: "Test1", data: 34, backgroundColor: colGen.next().value };
-        const valObj2 = { label: "Test2", data: 49, backgroundColor: colGen.next().value };
-        const valObj3 = { label: "Test3", data: 41, backgroundColor: colGen.next().value };
-        updatePerProcessChart(cpuUsageByProcessChart, [valObj1, valObj2, valObj3]);
-        updatePerProcessChart(ramUsageByProcessChart, [valObj1, valObj2, valObj3]);
-
-        // network charts
-        updateNWtotalChart(randomIntBetween(50), randomIntBetween(50), randomIntBetween(50), randomIntBetween(50), randomIntBetween(50), randomIntBetween(50));
-        updateNWperSecChart(randomIntBetween(50), randomIntBetween(50));
-
-        // disk charts
-        updateIOperSecChart(randomIntBetween(50), randomIntBetween(50));
-        updateIOtotalChart(randomIntBetween(50), randomIntBetween(50));
+        updateContainerInfo(runtimeInfo);
     };
+}
+
+/**
+ * Update runtime information to be displayed
+ * @param {Object} runtimeInfo Object containing runtime information to shown container
+ */
+function updateContainerInfo(runtimeInfo) {
+    // update HTML tables
+    updateHTMLTable("processes-table", runtimeInfo.procsTabHTML);
+    updateHTMLTable("network-interfaces-table", runtimeInfo.netInfsHTML);
+
+    // resource usage and processes
+    updateProcessesByStateChart(runtimeInfo.processes.running, runtimeInfo.processes.sleeping, runtimeInfo.processes.blocked, runtimeInfo.processes.blocked);
+
+    const processes = runtimeInfo.processes.list;
+
+    const cpuUsageByProcs = [];
+    const ramUsageByProcs = [];
+    const colGen = colorGenerator();
+    processes.forEach(it => {
+        // generate one color for each process (the same process will have the same color in both charts)
+        const col = colGen.next().value;
+        cpuUsageByProcs.push({ label: it.name, data: it.pcpu, backgroundColor: col });
+        ramUsageByProcs.push({ label: it.name, data: it.pcpu, backgroundColor: col });
+    });
+    updatePerProcessChart(cpuUsageByProcessChart, cpuUsageByProcs);
+    updatePerProcessChart(ramUsageByProcessChart, ramUsageByProcs);
+
+    // network charts
+    const nw = runtimeInfo.networkStats;
+    updateNWtotalChart(nw.rx_bytes, nw.rx_dropped, rx_errors, nw.tx_bytes, nw.tx_dropped, nw.tx_errors);
+    updateNWperSecChart(nw.rx_sec, nw.tx_sec);
+
+    // disk charts
+    const d = runtimeInfo.disksIO;
+    updateIOperSecChart(d.rIO_sec, d.wIO_sec, d.tIO_sec);
+    updateIOtotalChart(d.rIO, d.wIO);
 }
 
 /**
@@ -400,6 +417,18 @@ function initIOperSecChart() {
                         },
                     }
                 },
+                {
+                    label: "Total I/O per s",
+                    data: [],
+                    backgroundColor: colors.warning,
+                    borderColor: colors.warning,
+                    fill: false,
+                    datalabels: {
+                        display: function (context) {
+                            return (context.dataIndex % 5 === 0); // only display every 5th label
+                        },
+                    }
+                },
             ]
         },
         options: {
@@ -436,10 +465,12 @@ function initIOperSecChart() {
  * Update "I/O per second" chart
  * @param {Int} rSec read I/O per second
  * @param {Int} wSec write I/O per second
+ * @param {Int} wSec total I/O per second
  */
-function updateIOperSecChart(rSec, wSec) {
+function updateIOperSecChart(rSec, wSec, tSec) {
     let rSecData = ioPerSecChart.data.datasets[0].data;
     let wSecData = ioPerSecChart.data.datasets[1].data;
+    let tSecData = ioPerSecChart.data.datasets[2].data;
     let timeline = ioPerSecChart.data.labels;
 
     const historySec = 30;
@@ -448,12 +479,14 @@ function updateIOperSecChart(rSec, wSec) {
         // shift y-axes values
         rSecData.shift();
         wSecData.shift();
+        tSecData.shift();
         // shift x-axes timeline
         timeline.shift();
     }
     // add y-axes values
     rSecData.push(rSec);
     wSecData.push(wSec);
+    tSecData.push(tSec)
     // add x-axes time
     const current = new Date();
     timeline.push(`${current.getHours().toString().padStart(2, "0")}:${current.getSeconds().toString().padStart(2, "0")}`);
@@ -668,7 +701,7 @@ function updateNWperSecChart(rTraffic, tTraffic) {
  * @param {String} id 
  * @param {String} newTableHTML 
  */
-function updateHTMLTable(id, newTableHTML){
+function updateHTMLTable(id, newTableHTML) {
     // get table
     const oldTab = document.getElementById(id);
     // get parent of table

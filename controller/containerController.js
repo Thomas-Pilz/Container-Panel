@@ -24,7 +24,7 @@ const containerController = {
                 title: `Container Details - ${req.params.id}`,
                 nav: model.getNav(),
                 // for test purposes only
-                netInfs: [{ iface: "eth0", operstate: "up" }],
+                netInfs: [],
                 procs: [],
             }
             );
