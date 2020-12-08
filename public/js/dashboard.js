@@ -19,7 +19,7 @@ const color4state = {
     restarting: "text-dark"
 };
 
-let cpuChart;
+let ioPerSecChart;
 let ramChart;
 let containerChart;
 
@@ -71,7 +71,7 @@ function configCharts() {
 
 function initCpuChart() {
     const ctx = document.getElementById("cpuChart");
-    cpuChart = new Chart(ctx, {
+    ioPerSecChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: ["Load in %", "Idle in %"],
@@ -218,9 +218,9 @@ function startWebsocketClient(){
 
 
 function updateCpuChart(currentLoad) {
-    cpuChart.data.datasets[0].data[0] = currentLoad.toFixed(2);
-    cpuChart.data.datasets[0].data[1] = (100 - currentLoad).toFixed(2);
-    cpuChart.update();
+    ioPerSecChart.data.datasets[0].data[0] = currentLoad.toFixed(2);
+    ioPerSecChart.data.datasets[0].data[1] = (100 - currentLoad).toFixed(2);
+    ioPerSecChart.update();
 };
 
 function updateRamChart(usedMem, freeMem) {

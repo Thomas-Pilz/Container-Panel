@@ -2,6 +2,45 @@ extends ../layout
 block append styles
 block append scripts
     script(src="js/containerDetails.js" type="text/javascript")
+
+//- Page content 
 block content
-    div.border-bottom.pt-3
+    div.row.pt-3
         h1 Container Details
+
+    //- Processes 
+    div.border-w-2.pt-3
+        i.fas.fa-chart-line.fa-2x.pr-3
+        span.class-title.section-title Processes
+    div#ressorceUsage.row.p-0.pt-3
+        div.col-4
+            include processes/card_processesByStateChart
+        div.col-4
+            include processes/card_cpuUsageByProcessChart
+        div.col-4
+            include processes/card_ramUsageByProcessChart
+    div.row.p-0.pt-4
+        div.col-12
+            include processes/processesTable
+
+    //- Network 
+    div.border-w-2.pt-5
+        i.fas.fa-network-wired.fa-2x.pr-3
+        span.class-title.section-title Network
+    div#network.row.p-0.pt-3
+        div.col-2
+            include network/card_networkInterfacesTable
+        div.col-5
+            include network/card_nwTotalChart
+        div.col-5.d-flex.flex-column.align-items-stretch
+            include network/card_nwPerSecChart
+
+    //- Disk I/O
+    div.border-w-2.pt-5
+        i.fas.fa-hdd.fa-2x.pr-3
+        span.class-title.section-title Disk I/O
+    div#diskIO.row.p-0.pt-3.pb-3
+        div.col-6
+            include diskIO/card_ioTotalChart
+        div.col-6
+            include diskIO/card_ioPerSecChart

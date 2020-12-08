@@ -1,0 +1,35 @@
+extends ../../templates/card_footerless_templ
+block card-header
+    i.fas.fa-table.pr-3
+    span.font-weight-bold.card-title Processes
+block card-body
+    table#processes-table.table.table-hover.mt-4.table-responsive-sm.table-responsive-md.table-responsive-lg.table-responsive-xl
+        thead
+            tr
+                th PID
+                th STATE
+                th NAME
+                th PRIORITY
+                th PARENT
+                th STARTED
+                th TTY
+                th USER
+                th MEMORY %
+                th PATH
+                th COMMAND
+                th PARAMS
+        tbody
+            each proc in procs
+                tr 
+                    td= proc.pid
+                    td= proc.state
+                    td= proc.name
+                    td= proc.priority
+                    td= proc.parent
+                    td= proc.started
+                    td= proc.tty
+                    td= proc.user
+                    td= proc.pmen
+                    td= proc.path
+                    td= proc.command
+                    td= proc.params

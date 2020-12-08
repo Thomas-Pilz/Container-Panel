@@ -1,0 +1,6 @@
+extends ../../templates/card_footerless_templ
+block card-header
+    i.fas.fa-chart-line.pr-3
+    span.font-weight-bold.card-title Network Traffic per s: eth0
+block card-body
+    canvas#nwPerSecChart.card-text

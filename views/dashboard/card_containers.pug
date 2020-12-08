@@ -1,4 +1,6 @@
 extends ../templates/card_footerless_templ
+block card-header
+    i.fas.fa-chart-bar.pr-3
+    span.font-weight-bold.card-title Containers by State
 block card-body
-    h4.class-title Containers
     canvas#containerChart.card-text

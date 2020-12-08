@@ -2,7 +2,7 @@ block append styles
     link(rel="stylesheet" type="text/css" href="css/sidebar.css")
 block append scripts
     script(src="js/sidebar.js" type="text/javascript")
-div#sidebar-wrapper.bg-primary.h-100
+div#sidebar-wrapper.h-100.border-right.border-primary.bg-primary
     svg#Krones-Logo-White.mr-4.ml-4.mt-2.mb-2(style="height: 5vh;" data-name="Krones-Logo-White" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 209.979 64.582")
         title Krones Logo
         path(d="M86.787,29.732H80.63L70.047,43.2V29.732H64.554V60.609h5.493V46.422L80.58,60.609h7.283L75.157,44.659c.3-.369,12.27-14.927,12.27-14.927Z" transform="translate(-16.219 -13.084)" fill="#fff")
@@ -15,7 +15,5 @@ div#sidebar-wrapper.bg-primary.h-100
         path(d="M45.973,13.086a.17.17,0,0,0-.121.076L30.938,35.843a.172.172,0,0,0-.018.151L39.9,61.608a.168.168,0,0,0,.1.1.165.165,0,0,0,.142-.008l3.293-1.736a.172.172,0,0,0,.072-.232,38.835,38.835,0,0,1,5.4-43.922.172.172,0,0,0,.043-.124.169.169,0,0,0-.057-.119l-2.783-2.443a.17.17,0,0,0-.136-.041Z" transform="translate(-16.219 -13.084)" fill="#fff")
     div.nav.flex-column.pt-4
         each item in nav 
-            a.nav-item.sb-nav-item.p-3.nav-link(href=item.href)
+            a.nav-item.sb-nav-item.mt-1.mb-1.p-3.nav-link(href=item.href)
                 include ./navItem_layout
-    button#sidebar-toggler.fixed-bottom.bg-transparent.border-0(type="button")
-        i.fas.fa-angle-double-right.fa-2x.p-2.text-white

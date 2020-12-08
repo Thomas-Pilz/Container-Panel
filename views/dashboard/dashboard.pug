@@ -5,13 +5,33 @@ block append styles
 block append scripts
     script(src="js/dashboard.js" type="text/javascript")
 block content
-    div(class="border-bottom pt-3")
+    div.pt-3
         h1 Dashboard
-    div(class="col-12 card-deck p-0 pt-3")
-        include card_containers
-        include card_cpuUtil
-        include card_ramUtil
-    div(class="col-12 p-0 pt-3 pr-4")
-        include card_containerTable
-    div(class="col-12 p-0 pt-3 pr-4 pb-3")
-        include card_imageTable
+
+    //- Host Statistics
+    div.border-w-2.pt-3
+        i.fas.fa-chart-line.fa-2x.pr-3
+        span.class-title.section-title Host Statistics
+    div.row.p-0.pt-3
+        div.col-4
+            include card_containers
+        div.col-4    
+            include card_cpuUtil
+        div.col-4    
+            include card_ramUtil
+
+    //- Containers
+    div.border-w-2.pt-5
+        i.fab.fa-docker.fa-2x.pr-3
+        span.class-title.section-title Containers 
+    div.row.p-0.pt-3
+        div.col-12
+            include card_containerTable
+
+    //- Images
+    div.border-w-2.pt-5
+        icon.far.fa-clone.fa-2x.pr-3
+        span.class-title.section-title Images 
+    div.row.p-0.pt-3.pb-3
+        div.col-12
+            include card_imageTable

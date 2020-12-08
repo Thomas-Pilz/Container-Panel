@@ -3,18 +3,33 @@ block append styles
     link(rel="stylesheet" href="css/imageDetails.css")
 block append scripts
 block content
-    div(class="border-bottom pt-3")
+    div.pt-3
         h1 Image Details
-    div(class="col-12 card-deck p-0 pt-3")
-        //- include card_imageHeader
-        include card_imageInfo
-        include card_imageConfig
-    div(class="col-12 card-deck p-0 pt-3")
-        include card_imageHistory
-    div(class="col-12 card-deck p-0 pt-3 pb-3")
-        include card_imageLayers
-        include card_dockerLogo    
-    //- div(class="col-12 p-0 pt-3 pr-4")
-    //-     include card_containerTable
-    //- div(class="col-12 p-0 pt-3 pr-4")
-    //-     include card_imageTable
+    
+    //- General
+    div.border-w-2.pt-3
+        i.fas.fa-list.fa-2x.pr-3
+        span.class-title.section-title General
+    div.row.p-0.pt-3
+        div.col-6
+            include card_imageInfo
+        div.col-6    
+            include card_imageConfig
+
+    //- History
+    div.border-w-2.pt-5
+        i.fas.fa-history.fa-2x.pr-3
+        span.class-title.section-title History
+    div.row.p-0.pt-3
+        div.col-12
+            include card_imageHistory
+
+    //- Layers
+    div.border-w-2.pt-5
+        i.fas.fa-layer-group.fa-2x.pr-3
+        span.class-title.section-title Layers
+    div.row.p-0.pt-3.pb-3
+        div.col-6
+            include card_imageLayers
+        div.col-6
+            include card_dockerLogo    

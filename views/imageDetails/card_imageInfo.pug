@@ -1,7 +1,8 @@
 extends ../templates/card_footerless_templ
-block card-body
+block card-header
     i.fas.fa-info-circle.fa-2x.pr-3
-    span.class-title.card-title Information
+    span.font-weight-bold.card-title Information
+block card-body
     div.row.text-left.m-2.mt-4#image-info
         for key in Object.keys(info)
             if infoLabels.hasOwnProperty(key)
