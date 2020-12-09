@@ -1,5 +1,5 @@
 # Container-Panel
-Webapp to get information on Docker images and containers on a host running the Docker daemon. Additionally some small Actions on containers can be performed such as stopping or restarting containers.
+Webapp to get information on Docker images and containers on a host running the Docker daemon. Additionally some small actions on containers can be performed such as stopping or restarting containers.
 
 ## How to get it
 The docker container can be pulled from the Docker Container Registry as follows:
@@ -23,6 +23,6 @@ All other information available (that is everything but the live container data 
 Information on containers and images will be retrieved every second and cached internally. As soon as something changes all connected cients will be notified and updated with the most recent data.
 
 ## Possible improvements for coming versions
--[] make application port configurable
--[] make deepstream.io container name and port (for service discovery) configurable
--[] use Docker API instead of deepstream.io and special container client to retrieve live container data
+- [ ] make application port configurable
+- [ ] make deepstream.io container name and port (for service discovery) configurable
+- [ ] use Docker API instead of deepstream.io and special container client to retrieve live container data
