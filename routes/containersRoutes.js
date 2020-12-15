@@ -19,9 +19,7 @@ router
 router.ws("/:id", (ws, req) => {
     console.log(`/containers: Client connected.`)
 
-    ws.on("message", msg => {
-        containerController.subscribeRuntimeInfoFromContainer(ws, req);
-    });
+    containerController.subscribeRuntimeInfoFromContainer(ws, req);
 
     ws.on("close", (code, reason) => {
         containerController.unsubscribeRuntimeInfoFromContainer(ws, req);

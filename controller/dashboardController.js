@@ -28,6 +28,8 @@ const dashboardController = {
             // format output
             // containers
             containers = formatter.formatContainers(containers);
+            // check if live data for a client is available
+            containers = dashboardController.checkLiveDataAvailable(containers);
 
             // images
             images = formatter.formatImages(images);
@@ -53,6 +55,7 @@ const dashboardController = {
 
         // containers
         containers = formatter.formatContainers(await containers);
+        containers = dashboardController.checkLiveDataAvailable(containers);
         utils.sendEvent(ws,"updateContainers", {
             containerTableHtml: containerTableTempl({ containers: containers }),
             stateCount: stateCount,
@@ -72,6 +75,7 @@ const dashboardController = {
         model.subscribeInfo("containers", (data) => {
             const stateCount = model.getStateCount(data)
             data = formatter.formatContainers(data);
+            containers = dashboardController.checkLiveDataAvailable(containers);
             utils.sendEvent(ws,"updateContainers", {
                 containerTableHtml: containerTableTempl({ containers: data }),
                 stateCount: stateCount,
@@ -88,6 +92,13 @@ const dashboardController = {
         model.subscribeInfo("hostStats", (data) => {
             utils.sendEvent(ws, "updateHostStats", data);
         });
+    },
+
+    checkLiveDataAvailable: (containers) => {
+        containers.forEach(it => {
+            it.available = model.checkContainerLiveDataAvailable(it.Id);
+        });
+        return containers;
     },
 }
 module.exports.dashboardController = dashboardController;

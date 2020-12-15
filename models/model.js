@@ -8,7 +8,17 @@ const utils = require("../utils/utils.js");
 
 
 // Initialize global vars
-const client = new DeepstreamClient('deepstream:6020');          // connect to Deepstream server
+const deepstreamOptions = {
+    // Reconnect after 10, 20 and 30 seconds
+    reconnectIntervalIncrement: 10000,
+    // Try reconnecting every thirty seconds
+    maxReconnectInterval: 30000,
+    // We never want to stop trying to reconnect
+    maxReconnectAttempts: Infinity,
+    // Send heartbeats only once a minute
+    heartbeatInterval: 60000
+};
+const client = new DeepstreamClient('deepstream:6020', deepstreamOptions);          // connect to Deepstream server
 docker = new Docker({ socketPath: "/var/run/docker.sock" });    // connect to Docker unix socket
 const containerListName = "containerList";  // name of list containing registered container in Deepstream.io
 
@@ -18,6 +28,7 @@ let hostStats = {};
 let imageHistory = {};
 
 const observers = new Map();
+const liveContainers = new Set();
 
 const model = {
     /**
@@ -39,6 +50,31 @@ const model = {
             // { href: "/images", text: "Images", iconClass: "far fa-clone fa-lg pr-3 text-white" },
             // { href: "/ressources", text: "Ressources", iconClass: "fas fa-server fa-lg pr-3 text-white" },
         ];
+    },
+
+    checkContainerLiveDataAvailable(id){
+        return liveContainers.has(`${containerListName}/${id}`) ? true : false;
+    },
+
+    /**
+     * Sets liveContainers. Container-ID will be in Set if live data is available.
+     */
+    setLiveDataAvailable: async () => {
+        // get list; connection should be open at that point but could fail anytime (theoretically)
+        try {
+            const containerList = await client.record.getList(containerListName).whenReady();
+            // subscribe to list updates and trigger first one now
+            containerList.subscribe(setLiveContainersAvailable, true);
+        } catch (error) {
+            // any error
+            liveContainers.clear()
+        }
+
+        function setLiveContainersAvailable(listEntries) {
+            console.log(listEntries);
+            liveContainers.clear();
+            listEntries.forEach(it => liveContainers.add(it));
+        }
     },
 
     /**
@@ -98,7 +134,7 @@ const model = {
         if (isEmpty(imageHistory)) {
             await model.fetchImageHistory(id);
         }
-        return await clonedeep(imageHistory);     
+        return await clonedeep(imageHistory);
     },
 
     /**
@@ -107,11 +143,11 @@ const model = {
      * @param {String[]} fields list of fields to be returned
      */
     fetchImageHistory: async (id, fields = ["Id", "Created", "CreatedBy", "Tags", "Size", "Comment"]) => {
-        
+
         const image = docker.getImage(id);
         const newImageHistory = await image.history().catch(err => console.error("Failed to retrieve image history information.\nError:\n" + err));
         const filteredImageHistory = await utils.filterObjectList(newImageHistory, fields);
-        if(!isEqual(filteredImageHistory, imageHistory)){
+        if (!isEqual(filteredImageHistory, imageHistory)) {
             imageHistory = filteredImageHistory;
             // model.notifyAll("", clonedeep())
         };
@@ -144,7 +180,7 @@ const model = {
      * Get latest stats from host
      */
     getHostStats: async () => {
-        if (isEmpty(hostStats)){
+        if (isEmpty(hostStats)) {
             hostStats = await model.fetchHostStats().catch(err => console.error("Failed to retrieve host stats."));
         }
         return await clonedeep(hostStats);
@@ -169,23 +205,23 @@ const model = {
      * @param {any} data Runtime information of container
      */
     subscribeRuntimeInfoFromContainer: async (id, cb) => {
-        const containerList = await client.record.getList(containerListName).whenReady();
-        if (!containerList.getEntries().find(recordName => recordName === `${containerListName}/${id}`)) {
+        if (!model.checkContainerLiveDataAvailable(id)) {
             console.error(`No runtime information available for container ${id}.`);
             return {
                 err: `No runtime information available for container ${id}.`
             };
         }
-        curContainer = await client.record.getRecord(`${containerListName}/${id}`).subscribe(cb);
+        console.log(`Subscribing to container runtime information of container ${id}`);
+        curContainer = await client.record.getRecord(`${id}`).subscribe(cb, true);
     },
 
     unsubscribeRuntimeInfoFromContainer: async (id) => {
         const containerList = await client.record.getList(containerListName).whenReady();
         if (!containerList.getEntries().find(recordName => recordName === `${containerListName}/${id}`)) {
-            console.error(`Container ${id} does not exist.`);
+            console.error(`Container subscription could not be ended because container ${id} does not exist.`);
             return;
         }
-        curContainer = client.record.getRecord(`${containerListName}/${id}`).unsubscribe();
+        curContainer = client.record.getRecord(`${id}`).unsubscribe();
     },
 
     /**
@@ -243,12 +279,21 @@ const model = {
         }
         observers.get(kind).forEach(it => it(data));
     },
-}; 
+};
 
 model.addObserverCategory("containers");
 model.addObserverCategory("images");
 model.addObserverCategory("hostStats");
 
 model.login2Deepstream();
+client.on("connectionStateChanged", state => {
+    if (state === "OPEN") {
+        model.setLiveDataAvailable();
+    }
+    else{
+        // no live data is available
+        liveContainers.clear();
+    }
+})
 
 module.exports.model = model;

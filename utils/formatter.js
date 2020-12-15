@@ -71,6 +71,11 @@ function formatDateString(dateString){
  * @returns {any[]} formatted list of containers 
  */
 function formatContainers(containers){
+    containers.forEach(it => {
+        if (it.Image.startsWith("sha")){
+            it.Image = formatId(it.Image);
+        }
+    })
     return containers;
 }
 
@@ -85,7 +90,7 @@ function formatImages(images){
         it.Created = formatDate(it.Created);
         it.Size = formatSize(it.Size);
         if(it.RepoTags === null){
-            it.RepoTags = [];
+            it.RepoTags = ["<none>:<none>"];
         }
     });
     return images;

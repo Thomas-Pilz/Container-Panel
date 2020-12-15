@@ -1,4 +1,4 @@
-table.table.table-hover.mt-4.table-responsive-sm.table-responsive-md.table-responsive-lg.table-responsive-xl#imageHistory-table
+table.table.table-hover.mt-4.table-responsive-xl#imageHistory-table
     thead
         tr
             th ID
@@ -10,12 +10,12 @@ table.table.table-hover.mt-4.table-responsive-sm.table-responsive-md.table-respo
     tbody
         each ih in imageHistory
             tr
-                td(style="width: 5%; max-width: 5%;")= ih.Id
-                td.text-right= ih.Created
-                td(style="width: wrap-content;")= ih.CreatedBy
-                td(style="max-width: 50px;")
+                td= ih.Id
+                td.text-right(style="min-width: 100px; width: 200px; max-width: 200px;")= ih.Created
+                td(style="width: 100px;")= ih.CreatedBy
+                td
                     each tag in ih.Tags
                         span= tag
                         br
-                td.text-right(style="width: wrap-content;")= ih.Size
+                td.text-right(style="width: 80px;")= ih.Size
                 td= ih.Comment

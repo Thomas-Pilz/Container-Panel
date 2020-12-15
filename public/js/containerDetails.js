@@ -112,6 +112,7 @@ function startWebsocketClient() {
  * @param {Object} runtimeInfo Object containing runtime information to shown container
  */
 function updateContainerInfo(runtimeInfo) {
+    console.log(runtimeInfo);
     // update HTML tables
     updateHTMLTable("processes-table", runtimeInfo.procsTabHTML);
     updateHTMLTable("network-interfaces-table", runtimeInfo.netInfsHTML);
@@ -134,8 +135,8 @@ function updateContainerInfo(runtimeInfo) {
     updatePerProcessChart(ramUsageByProcessChart, ramUsageByProcs);
 
     // network charts
-    const nw = runtimeInfo.networkStats;
-    updateNWtotalChart(nw.rx_bytes, nw.rx_dropped, rx_errors, nw.tx_bytes, nw.tx_dropped, nw.tx_errors);
+    const nw = runtimeInfo.networkStats[0];
+    updateNWtotalChart(nw.rx_bytes, nw.rx_dropped, nw.rx_errors, nw.tx_bytes, nw.tx_dropped, nw.tx_errors);
     updateNWperSecChart(nw.rx_sec, nw.tx_sec);
 
     // disk charts
@@ -699,7 +700,7 @@ function updateNWperSecChart(rTraffic, tTraffic) {
 /**
  * Replaces a HTML table identified by @param id with the HTML specified in @param newTableHTML in the DOM.
  * @param {String} id 
- * @param {String} newTableHTML 
+ * @param {String} newTableHTML String 
  */
 function updateHTMLTable(id, newTableHTML) {
     // get table
@@ -707,5 +708,5 @@ function updateHTMLTable(id, newTableHTML) {
     // get parent of table
     const tabParent = oldTab.parentElement;
     // replace child
-    tabParent.replaceChild(oldTab, newTableHTML);
+    tabParent.innerHTML = newTableHTML;
 }

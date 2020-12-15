@@ -37,23 +37,30 @@ const containerController = {
      * @todo Implement suitable error handling
      */
     subscribeRuntimeInfoFromContainer: async (ws, req) => {
-        model.subscribeRuntimeInfoFromContainer(req.params.id, (runtimeInfo) => {
+        model.subscribeRuntimeInfoFromContainer(req.params.id, (data) => {
+            console.log("Callback with runtime info called");
             try {
                 // create HTML for processes table
-                const procsTabHTML = processesTableTempl({ procs: runtimeInfo.processes.list });
+                console.log(data.processes);
+                const procsTabHTML = processesTableTempl({ procs: data.processes.list });
+                console.log("Processes succeeded");
                 // create HTML for network interfaces table
-                const netInfsHTML = netInfsTableTempl({ netInfs: runtimeInfo.networkStats });
+                const netInfsHTML = netInfsTableTempl({ netInfs: data.networkStats });
+                console.log("NetInfs succeeded")
+                console.table(data.networkStats);
 
-                const valObj = {
+                const valObj = {   
                     procsTabHTML: procsTabHTML,
                     netInfsHTML: netInfsHTML,
-                    processes: runtimeInfo.processes,
-                    disksIO: runtimeInfo.disksIO,
-                    networkStats: runtimeInfo.networkStats,
+                    processes: data.processes,
+                    disksIO: data.disksIO,
+                    networkStats: data.networkStats,
                 };
 
+                console.log(valObj);
                 ws.send(JSON.stringify(valObj));
             } catch (error) {
+                console.log(error);
                 // Websocket might be closed before callback --> sending over terminated connection --> error
                 // TODO implement suitable error handling
             }

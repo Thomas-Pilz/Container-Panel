@@ -46,5 +46,6 @@ table.table.table-hover.mt-4.table-responsive-sm.table-responsive-md.table-respo
                 td= container.Command
                 if !config.buttonType === "undefined"
                 td(style="width: 180px;")
-                    button(class="action-btn btn btn-primary" onclick=`window.location.href='/containers/${container.Id}'`) Details
                     button(class="action-btn start-stop-btn btn " + config.buttonType type="button" style="width: 80px;" onclick=`containerAction('${container.Id}', '${config.action}')`)= config.buttonText
+                    if container.available === true
+                        button(class="action-btn btn btn-primary" onclick=`window.location.href='/containers/${container.Id}'`) Details
