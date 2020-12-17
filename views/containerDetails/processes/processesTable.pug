@@ -1,3 +1,10 @@
+- 
+    const state2color = {
+        sleeping: "text-danger",
+        running: "text-success",
+        blocked: "text-warning",
+        unknown: "text-secondary",
+    }
 table#processes-table.table.table-hover.mt-4.table-responsive-sm.table-responsive-md.table-responsive-lg.table-responsive-xl
         thead
             tr
@@ -9,7 +16,7 @@ table#processes-table.table.table-hover.mt-4.table-responsive-sm.table-responsiv
                 th STARTED
                 th TTY
                 th USER
-                th MEMORY %
+                th MEMORY
                 th PATH
                 th COMMAND
                 th PARAMS
@@ -17,14 +24,14 @@ table#processes-table.table.table-hover.mt-4.table-responsive-sm.table-responsiv
             each proc in procs
                 tr 
                     td= proc.pid
-                    td= proc.state
+                    td(class=state2color[proc.state.toLowerCase()])= proc.state
                     td= proc.name
                     td= proc.priority
-                    td= proc.parent
+                    td= proc.parentPid
                     td= proc.started
                     td= proc.tty
                     td= proc.user
-                    td= proc.pmen
+                    td= proc.pmem
                     td= proc.path
                     td= proc.command
                     td= proc.params

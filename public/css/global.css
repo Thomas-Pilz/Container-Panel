@@ -1,7 +1,6 @@
 /* Make cursor a pointer in case of an element with a object that will link to another page due to javascript */
 html {
     font-family: 'Roboto', sans-serif;
-    ;
 }
 
 .section-title{
@@ -64,4 +63,9 @@ html {
 .rounded-bottom-75 {
     border-bottom-left-radius: .75rem !important;
     border-bottom-right-radius: .75rem !important;
+}
+
+.active-nw {
+    text-decoration: none !important;
+    color: black !important;
 }

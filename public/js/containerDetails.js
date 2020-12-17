@@ -24,6 +24,11 @@ let ioTotalChart = null;
 let nwPerSecChart = null;
 let nwTotalChart = null;
 
+let previousActiveNWIf = null;
+let activeNWIf = 1;
+
+const containerId = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)
+
 // on page load
 window.onload = (e) => {
     // global chart configuration
@@ -112,7 +117,6 @@ function startWebsocketClient() {
  * @param {Object} runtimeInfo Object containing runtime information to shown container
  */
 function updateContainerInfo(runtimeInfo) {
-    console.log(runtimeInfo);
     // update HTML tables
     updateHTMLTable("processes-table", runtimeInfo.procsTabHTML);
     updateHTMLTable("network-interfaces-table", runtimeInfo.netInfsHTML);
@@ -125,23 +129,31 @@ function updateContainerInfo(runtimeInfo) {
     const cpuUsageByProcs = [];
     const ramUsageByProcs = [];
     const colGen = colorGenerator();
+    // push 
+    const green = colGen.next().value; // first color will be green and next ones not --> distinguishable --> DO NOT MODIFY ORDER
+    const red = colGen.next().value; // second color will be red and next ones not --> distinguishable --> DO NOT MODIFY ORDER
+    cpuUsageByProcs.push({ label: "Free", data: runtimeInfo.cpu.freeHost.toFixed(2), backgroundColor: green });
+    cpuUsageByProcs.push({ label: "Other processes", data: (runtimeInfo.cpu.totalUsedHost - runtimeInfo.cpu.usedByContainer).toFixed(2), backgroundColor: red });
+    ramUsageByProcs.push({ label: "Free", data: conv2SizeUnit(runtimeInfo.ram.freeHost, "GB"), backgroundColor: green });
+    ramUsageByProcs.push({ label: "Other processes", data: conv2SizeUnit(runtimeInfo.ram.totalUsedHost - runtimeInfo.ram.usedByContainer, "GB"), backgroundColor: red });
     processes.forEach(it => {
         // generate one color for each process (the same process will have the same color in both charts)
         const col = colGen.next().value;
-        cpuUsageByProcs.push({ label: it.name, data: it.pcpu, backgroundColor: col });
-        ramUsageByProcs.push({ label: it.name, data: it.pcpu, backgroundColor: col });
+        cpuUsageByProcs.push({ label: it.name, data: it.pcpu.toFixed(2), backgroundColor: col });
+        ramUsageByProcs.push({ label: it.name, data: conv2SizeUnit(it.pmem, "GB"), backgroundColor: col });
     });
+
     updatePerProcessChart(cpuUsageByProcessChart, cpuUsageByProcs);
     updatePerProcessChart(ramUsageByProcessChart, ramUsageByProcs);
 
     // network charts
-    const nw = runtimeInfo.networkStats[0];
-    updateNWtotalChart(nw.rx_bytes, nw.rx_dropped, nw.rx_errors, nw.tx_bytes, nw.tx_dropped, nw.tx_errors);
-    updateNWperSecChart(nw.rx_sec, nw.tx_sec);
+    const nw = runtimeInfo.networkStats;
+    updateNWtotalChart(nw.iface, nw.rx_bytes, nw.rx_dropped, nw.rx_errors, nw.tx_bytes, nw.tx_dropped, nw.tx_errors);
+    updateNWperSecChart(nw.iface, nw.rx_sec.toFixed(0), nw.tx_sec.toFixed(0));
 
     // disk charts
     const d = runtimeInfo.disksIO;
-    updateIOperSecChart(d.rIO_sec, d.wIO_sec, d.tIO_sec);
+    updateIOperSecChart(d.rIO_sec.toFixed(0), d.wIO_sec.toFixed(0), d.tIO_sec.toFixed(0));
     updateIOtotalChart(d.rIO, d.wIO);
 }
 
@@ -318,26 +330,20 @@ function initIOtotalChart() {
             labels: ["Total I/O"],
             datasets: [
                 {
-                    label: "Total Read I/O",
+                    label: "Read [Bytes]",
                     data: [0],
                     backgroundColor: colors.dark,
                     borderColor: colors.dark,
                     fill: false,
-                    datalabels: {
-                        anchor: "end",
-                        align: "middle",
-                    }
+                    datalabels: { anchor: "end", align: "middle" },
                 },
                 {
-                    label: "Total Write I/O",
+                    label: "Write [Bytes]",
                     data: [0],
                     backgroundColor: colors.danger,
                     borderColor: colors.danger,
                     fill: false,
-                    datalabels: {
-                        anchor: "end",
-                        align: "middle",
-                    }
+                    datalabels: { anchor: "end", align: "middle" },
                 },
             ]
         },
@@ -355,14 +361,20 @@ function initIOtotalChart() {
                     display: true,
                     ticks: {
                         min: 0,
-                        callback: (value, index, values) => {
-                            return value + " Bytes/s";
-                        }
-                    }
+                        // callback: (value, index, values) => {
+                        //     return value + " Bytes/s";
+                        // }
+                    },
+                    gridLines: {
+                        display: false,
+                    },
                 }],
                 xAxes: [{
                     stacked: true,
                     display: false,
+                    gridLines: {
+                        display: false,
+                    },
                 }]
             },
             legend: {
@@ -395,39 +407,33 @@ function initIOperSecChart() {
             labels: [],
             datasets: [
                 {
-                    label: "Read I/O per s",
+                    label: "Read [Bytes/s]",
                     data: [],
                     backgroundColor: colors.dark,
                     borderColor: colors.dark,
                     fill: false,
                     datalabels: {
-                        display: function (context) {
-                            return (context.dataIndex % 5 === 0); // only display every 5th label
-                        },
+                        display: false,
                     }
                 },
                 {
-                    label: "Write I/O per s",
+                    label: "Write [Bytes/s]",
                     data: [],
                     backgroundColor: colors.danger,
                     borderColor: colors.danger,
                     fill: false,
                     datalabels: {
-                        display: function (context) {
-                            return (context.dataIndex % 5 === 0); // only display every 5th label
-                        },
+                        display: false,
                     }
                 },
                 {
-                    label: "Total I/O per s",
+                    label: "Total [Bytes/s]",
                     data: [],
                     backgroundColor: colors.warning,
                     borderColor: colors.warning,
                     fill: false,
                     datalabels: {
-                        display: function (context) {
-                            return (context.dataIndex % 5 === 0); // only display every 5th label
-                        },
+                        display: false,
                     }
                 },
             ]
@@ -445,9 +451,9 @@ function initIOperSecChart() {
                     display: true,
                     ticks: {
                         min: 0,
-                        callback: (value, index, values) => {
-                            return value + " Bytes/s";
-                        }
+                        // callback: (value, index, values) => {
+                        //     return value + " Bytes/s";
+                        // }
                     }
                 }],
                 xAxes: [{
@@ -476,7 +482,7 @@ function updateIOperSecChart(rSec, wSec, tSec) {
 
     const historySec = 30;
     // remove first element before inserting a new one when max. seconds to be displayed is reached
-    if (rSecData.length === historySec) {
+    if (timeline.length === historySec) {
         // shift y-axes values
         rSecData.shift();
         wSecData.shift();
@@ -504,60 +510,51 @@ function initNWtotalChart() {
     return new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ["Reveived", "Transferred"],
+            labels: ["Received", "Transferred"],
             datasets: [
                 {
-                    label: "Total bytes",
+                    label: "Successful [Bytes]",
                     data: [0, 0],
                     backgroundColor: colors.success,
                     borderColor: colors.success,
                     fill: false,
-                    datalabels: {
-                        anchor: "end",
-                        align: "middle",
-                    }
+                    datalabels: { anchor: "end", align: "middle" },
                 },
                 {
-                    label: "Total dropped",
+                    label: "Dropped [Bytes]",
                     data: [0, 0],
                     backgroundColor: colors.warning,
                     borderColor: colors.warning,
                     fill: false,
-                    datalabels: {
-                        anchor: "end",
-                        align: "middle",
-                    }
+                    datalabels: { anchor: "end", align: "middle" },
                 },
                 {
-                    label: "Total errors",
+                    label: "Error [Bytes] ",
                     data: [0, 0],
                     backgroundColor: colors.danger,
                     borderColor: colors.danger,
                     fill: false,
-                    datalabels: {
-                        anchor: "end",
-                        align: "middle",
-                    }
+                    datalabels: { anchor: "end", align: "middle" },
                 },
             ]
         },
         options: {
-            // title: {
-            //     text: "Total Network Traffic".toUpperCase(),
-            //     display: true,
-            //     fontSize: 20,
-            //     fontStyle: "normal",
-            //     fontColor: "black",
-            // },
+            title: {
+                text: "",
+                display: true,
+                fontSize: 20,
+                fontStyle: "normal",
+                fontColor: "black",
+            },
             scales: {
                 yAxes: [{
                     stacked: true,
                     display: true,
                     ticks: {
                         min: 0,
-                        callback: (value, index, values) => {
-                            return value + " Bytes";
-                        }
+                        // callback: (value, index, values) => {
+                        //     return value + " Bytes";
+                        // }
                     },
                     gridLines: {
                         display: false,
@@ -579,8 +576,23 @@ function initNWtotalChart() {
     });
 }
 
-
-function updateNWtotalChart(rBytes, rDropped, rErrors, tBytes, tDropped, tErrors) {
+/**
+ * Update total network traffic chart
+ * @param {String} ifName name of network interface
+ * @param {number} rBytes   successfully received bytes
+ * @param {number} rDropped received dropped bytes
+ * @param {number} rErrors  received error bytes
+ * @param {number} tBytes   successfully transferred bytes 
+ * @param {number} tDropped transferred dropped bytes
+ * @param {number} tErrors  transferred error bytes
+ */
+function updateNWtotalChart(ifName ,rBytes, rDropped, rErrors, tBytes, tDropped, tErrors) {
+    if(ifName !== nwTotalChart.options.title.text){
+        nwTotalChart.options.title.text = ifName;   // set title to interface name
+        nwTotalChart.data.datasets.forEach(it => {  // clear data
+            it.data = []; 
+        });
+    }
     // Received
     nwTotalChart.data.datasets[0].data[0] = rBytes;
     nwTotalChart.data.datasets[1].data[0] = rDropped;
@@ -606,55 +618,51 @@ function initNWperSecChart() {
             labels: [],
             datasets: [
                 {
-                    label: "Received traffic per s",
+                    label: "Received [Bytes/s]",
                     data: [],
                     backgroundColor: colors.info,
                     borderColor: colors.info,
                     fill: false,
                     datalabels: {
-                        display: function (context) {
-                            return (context.dataIndex % 5 === 0); // only display every 5th label
-                        },
+                        display: false,
                     }
                 },
                 {
-                    label: "Transferred traffic per s",
+                    label: "Transferred [Bytes/s]",
                     data: [],
                     backgroundColor: colors.secondary,
                     borderColor: colors.secondary,
                     fill: false,
                     datalabels: {
-                        display: function (context) {
-                            return (context.dataIndex % 5 === 0); // only display every 5th label
-                        },
+                        display: false,
                     }
                 },
             ]
         },
         options: {
-            // title: {
-            //     text: "Network Traffic per Sec".toUpperCase(),
-            //     display: true,
-            //     fontSize: 20,
-            //     fontStyle: "normal",
-            //     fontColor: "black",
-            // },
+            title: {
+                text: "",
+                display: true,
+                fontSize: 20,
+                fontStyle: "normal",
+                fontColor: "black",
+            },
             scales: {
                 yAxes: [{
                     display: true,
                     ticks: {
                         min: 0,
-                        callback: (value, index, values) => {
-                            return value + " Bytes/s";
-                        }
+                        // callback: (value, index, values) => {
+                        //     return value + " Bytes/s";
+                        // }
                     },
                     gridLines: {
-                        display: false,
+                        display: true,
                     },
                 }],
                 xAxes: [{
                     gridLines: {
-                        display: false,
+                        display: true,
                     },
                     display: true,
                 }],
@@ -668,18 +676,26 @@ function initNWperSecChart() {
 }
 
 /**
- * Update "Network traffic per second" chart
- * @param {Int} rTraffic reveived traffic per second
- * @param {Int} tTraffic transferred traffic per second
+ * Update "Network traffic per second" chart.
+ * @param {String} ifName name of network interface
+ * @param {number} rTraffic reveived traffic per second
+ * @param {number} tTraffic transferred traffic per second
  */
-function updateNWperSecChart(rTraffic, tTraffic) {
+function updateNWperSecChart(ifName, rTraffic, tTraffic) {
     let rTrafficData = nwPerSecChart.data.datasets[0].data;
     let tTrafficData = nwPerSecChart.data.datasets[1].data;
     let timeline = nwPerSecChart.data.labels;
+    if(ifName !== nwPerSecChart.options.title.text){
+        nwPerSecChart.options.title.text = ifName;   // set title to interface name
+        nwPerSecChart.data.datasets.forEach(it => {  // clear data
+            it.data = []; 
+        });
+        nwPerSecChart.data.labels = [];
+    }
 
     const historySec = 30;
     // remove first element before inserting a new one when max. seconds to be displayed is reached
-    if (rTrafficData.length === historySec) {
+    if (timeline.length === historySec) {
         // shift y-axes values
         rTrafficData.shift();
         tTrafficData.shift();
@@ -709,4 +725,60 @@ function updateHTMLTable(id, newTableHTML) {
     const tabParent = oldTab.parentElement;
     // replace child
     tabParent.innerHTML = newTableHTML;
+}
+
+function onNwInterfaceShow(e, ifId){
+    e.preventDefault();
+
+    $.ajax({
+        url: `/containers/lol/${ifId}`,
+        // data: {
+        //     nwId: ifId,
+        // },
+        method: "GET",
+        // button will automatically be enabled again cause of state change of container as this state change will trigger the server to render and send a
+        // new version of the table html
+        // success: () => { stateTriggerButton.disabled = false; },  
+    });
+    // activeNWIf = ifId; // change active ID --> rest will be taken care of as soon as the next update takes place
+}
+
+/**
+ * Convert size given in bytes to another unit.
+ * Note: Decimalprefixes only, no binary prefixes! --> conversion factor: 1000
+ * @param {number} size size in bytes
+ * @param {String} unit unit to be converted to ["K", "KB", "MB", "GB", "TB"]
+ * @param {number} fractDigits number of fractional digits; default = 2;
+ * @param {boolean} withLabel add a unit label 
+ * @returns {String/ float} formatted size
+ */
+function conv2SizeUnit(size, unit, fractDigits = 2, withLabel = false) {
+    if (!(typeof fractDigits === "number") || fractDigits < 0) {
+        return console.error("Invalid argument fractDigits");
+    }
+
+    const factor = 1000;  // use 1000 instead of 1024 because GB not GiB are used to match docker cli behavior
+    const sizes = {
+        "K": 0,
+        "KB": 1,
+        "MB": 2,
+        "GB": 3,
+        "TB": 4,
+    }
+    const unitId = sizes[unit.toUpperCase()];
+    if (!unitId) {
+        return console.error(`Unsupported unit: use either one of these: ${Object.keys(sizes)}.`);
+    }
+
+    let convSize = size;
+    let count = 0;
+    while (!(count === unitId)) {
+        count++;
+        convSize = convSize / factor;
+    }
+
+    if (withLabel) {
+        return convSize.toFixed(fractDigits) + " " + unit;
+    }
+    return convSize.toFixed(fractDigits);
 }

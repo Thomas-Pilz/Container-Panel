@@ -280,6 +280,9 @@ function updateHtmlTable(parentId, tableHtml) {
 function containerAction(containerId, action) {
     url = "/containers/action";
     const stateTriggerButton = document.querySelector(`tr[data-js-href='containers/${containerId}'] td button.start-stop-btn`);
+    console.log(`Before: ${stateTriggerButton.disabled}`);
+    stateTriggerButton.disabled = true;
+    console.log(`After: ${stateTriggerButton.disabled}`);
     stateTriggerButton.innerHTML =
         `
     <div class="spinner-border spinner-border-sm text-white" role="status">
@@ -294,6 +297,9 @@ function containerAction(containerId, action) {
             id: containerId,
             action: action,
         }),
+        // button will automatically be enabled again cause of state change of container as this state change will trigger the server to render and send a
+        // new version of the table html
+        // success: () => { stateTriggerButton.disabled = false; },  
         contentType: 'application/json',
     });
 }

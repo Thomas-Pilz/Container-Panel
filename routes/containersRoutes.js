@@ -13,7 +13,8 @@ router
     // .get("/:id", (req, res) => {
     //     res.send("lol");
     // })
-    .post("/action", containerController.containerAction);
+    .post("/action", containerController.containerAction)
+    .get("/lol/:nwId", containerController.changeNetworkIf);  
 
 // Routes for WebSocket
 router.ws("/:id", (ws, req) => {
