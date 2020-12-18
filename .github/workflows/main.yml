@@ -1,0 +1,105 @@
+name: Build and push container image
+# events that will trigger the workflow to run
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# workflow_dispatch allows to manually trigger this workflow  
+  workflow_dispatch:
+
+# Set enviroment variables  
+env:
+  AZURE_CR: "thomastestazurecontainerreg.azurecr.io"
+  IMG_NAME: "container-panel"
+  DOCKERFILE: "Dockerfile" 
+
+#----------------------------------------
+# Start of actual workflow (i.e. jobs)
+#----------------------------------------
+jobs:
+  checkout_and_build:
+    name: Checkout code and build the container image
+    runs-on: [self-hosted,linux,X64,test]
+    steps: 
+# Checkout the repository
+    - id: checkout_repo
+      name: Check out the repo
+      uses: actions/checkout@v2
+      
+# Build the container image for DockerHub
+    - id: build_container_dockerhub
+      name: Build the Docker image
+      run: docker build --file $DOCKERFILE --tag ${{ secrets.DOCKERHUB_USERNAME_THOMAS }}/$IMG_NAME:$GITHUB_SHA .
+ 
+# Run all the pushes in parallel after build has finished! (NEEDS keyword!) 
+#---------------------------------- 
+  push_to_dockerhub:
+    name: Push image to DockerHub
+    # Dependency: Code must first be checked out and image must be built
+    needs: [checkout_and_build]
+    runs-on: [self-hosted,linux,X64,test]
+# Login to Dockerhub
+    steps:
+      - id: login_dockerhub
+        name: Login to DockerHub
+        uses: docker/login-action@v1 
+        with:
+            username: ${{ secrets.DOCKERHUB_USERNAME_THOMAS }}
+            password: ${{ secrets.DOCKERHUB_PASSWORD_THOMAS }}
+
+# Push the built Docker image to the Dockerhub registry
+      - id: push_dockerhub
+        name: Push image to DockerHub
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME_THOMAS }}/$IMG_NAME:$GITHUB_SHA
+      
+#----------------------------------
+  push_to_azure_cr:
+    name: Push image to Azure Container Registry
+    # Dependency: Code must first be checked out and image must be built
+    needs: [checkout_and_build]
+    runs-on: [self-hosted,linux,X64,test]
+    steps:
+# Tag the image to be used for Azure
+      - id: tag_container_azure
+        name: Tag image with Azure Container Registry URL
+        run: docker tag ${{ secrets.DOCKERHUB_USERNAME_THOMAS }}/$IMG_NAME:$GITHUB_SHA $AZURE_CR/$IMG_NAME:$GITHUB_SHA
+
+# Login to Azure container registry using the CLI
+      - id: login_azure_cr
+        name: Login to Azure Container Registry
+        run: echo "${{ secrets.AZURECR_PASSWORD_THOMAS }}" | docker login --username ${{ secrets.AZURECR_USERNAME_THOMAS }} --password-stdin $AZURE_CR
+        
+# Push the built Docker image to the Dockerhub registry
+      - id: push_azure
+        name: Push image to Azure container registry
+        run: docker push $AZURE_CR/$IMG_NAME:$GITHUB_SHA
+        
+#----------------------------------
+  push_to_github_cr:
+    name: Push image to Github Container Registry
+    # Dependency: Code must first be checked out and image must be built
+    needs: [checkout_and_build]
+    runs-on: [self-hosted,linux,X64,test]
+    steps:
+      - name: Tag image with Github Container Registry URL
+        id: tag_gcr
+        run: |
+            # GITHUB_CR_LOCAL will only be accessible in this step!
+            GITHUB_CR_LOCAL=ghcr.io/${{ github.repository }}
+            # Change all uppercase to lowercase as repository names are only allowed to be lowercase
+            GITHUB_CR_LOCAL=$(echo $GITHUB_CR_LOCAL | tr '[A-Z]' '[a-z]')
+            # Create a enviroment variable GITHUB_CR to be used in a later step to push the image (no need to do the conversion to lowercase twice!)
+            echo "GITHUB_CR=$GITHUB_CR_LOCAL" >> $GITHUB_ENV
+            docker tag ${{ secrets.DOCKERHUB_USERNAME_THOMAS }}/$IMG_NAME:$GITHUB_SHA $GITHUB_CR_LOCAL:$GITHUB_SHA
+      
+      # Authenticate/ Login to the Github Container Registry
+      - name: Login to the Githuab Container Registry using a personal access token
+        id: login_github_cr
+        run: echo "${{ secrets.PAT_THOMAS }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
+      
+      # Push the image to the Github Container Registry
+      - name: Push image to Github Container Registry
+        id: push_github_cr
+        run: docker push $GITHUB_CR:$GITHUB_SHA
