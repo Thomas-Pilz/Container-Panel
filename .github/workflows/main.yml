@@ -39,7 +39,7 @@ jobs:
     name: Push image to DockerHub
     # Dependency: Code must first be checked out and image must be built
     needs: [checkout_and_build]
-    runs-on: [self-hosted,linux,X64,test]
+    runs-on: [self-hosted,linux,X64]
 # Login to Dockerhub
     steps:
       - id: login_dockerhub
@@ -59,7 +59,7 @@ jobs:
     name: Push image to Azure Container Registry
     # Dependency: Code must first be checked out and image must be built
     needs: [checkout_and_build]
-    runs-on: [self-hosted,linux,X64,test]
+    runs-on: [self-hosted,linux,X64]
     steps:
 # Tag the image to be used for Azure
       - id: tag_container_azure
