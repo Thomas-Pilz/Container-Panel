@@ -164,8 +164,8 @@ const model = {
     },
 
     /**
-     * Get all images stored on a host and cache it.
-     * @param {String[]} fields list of fields to be returned
+     * Fetch all images stored on a host and cache them.
+     * @param {String[]} fields list of fields to be compared and cached (must be fields provided by the Docker API!)
      */
     fetchImages: async (fields = ["Id", "RepoTags", "Created", "Size"]) => {
         const newImageData = await docker.listImages().catch(err => console.error("Failed to retrieve image list.\nError:\n" + err));
